@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Retail Forecasting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100">
+    <!-- Top Bar -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-blue-600">Admin Dashboard</h1>
+                <p class="text-sm text-gray-600">Real-time Retail Forecasting Analytics</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="loadDashboard()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-sync-alt mr-2"></i>Refresh
+                </button>
+                <a href="/" class="text-blue-600 hover:underline">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <!-- KPI Cards Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+            <!-- Total Products -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Total Products</p>
+                        <p id="kpi_total_products" class="text-3xl font-bold text-blue-600">0</p>
+                    </div>
+                    <i class="fas fa-box text-blue-500 text-3xl opacity-20"></i>
+                </div>
+            </div>
+
+            <!-- Critical Stock -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Critical Stock</p>
+                        <p id="kpi_critical_stock" class="text-3xl font-bold text-red-600">0</p>
+                    </div>
+                    <i class="fas fa-exclamation-triangle text-red-500 text-3xl opacity-20"></i>
+                </div>
+            </div>
+
+            <!-- Low Stock -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Low Stock</p>
+                        <p id="kpi_low_stock" class="text-3xl font-bold text-yellow-600">0</p>
+                    </div>
+                    <i class="fas fa-box-open text-yellow-500 text-3xl opacity-20"></i>
+                </div>
+            </div>
+
+            <!-- Near Expiry -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Near Expiry</p>
+                        <p id="kpi_near_expiry" class="text-3xl font-bold text-orange-600">0</p>
+                    </div>
+                    <i class="fas fa-clock text-orange-500 text-3xl opacity-20"></i>
+                </div>
+            </div>
+
+            <!-- Expired -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-600">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Expired</p>
+                        <p id="kpi_expired" class="text-3xl font-bold text-red-700">0</p>
+                    </div>
+                    <i class="fas fa-times-circle text-red-600 text-3xl opacity-20"></i>
+                </div>
+            </div>
+
+            <!-- Total Orders -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Month Orders</p>
+                        <p id="kpi_month_orders" class="text-3xl font-bold text-green-600">0</p>
+                    </div>
+                    <i class="fas fa-shopping-cart text-green-500 text-3xl opacity-20"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+                <p class="text-green-100 text-sm mb-2">Today's Revenue</p>
+                <p id="kpi_today_revenue" class="text-4xl font-bold">₹0</p>
+            </div>
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+                <p class="text-blue-100 text-sm mb-2">Month Revenue</p>
+                <p id="kpi_month_revenue" class="text-4xl font-bold">₹0</p>
+            </div>
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+                <p class="text-purple-100 text-sm mb-2">Inventory Value</p>
+                <p id="kpi_inventory_value" class="text-4xl font-bold">₹0</p>
+            </div>
+        </div>
+
+        <!-- Tables Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Low Stock Products -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-box-open text-yellow-500 mr-2"></i>
+                    Low Stock Products
+                </h3>
+                <div id="low_stock_table" class="space-y-2 max-h-96 overflow-y-auto">
+                    <p class="text-gray-500 text-center py-8">Loading...</p>
+                </div>
+            </div>
+
+            <!-- Near Expiry Batches -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-clock text-orange-500 mr-2"></i>
+                    Near Expiry Batches
+                </h3>
+                <div id="near_expiry_table" class="space-y-2 max-h-96 overflow-y-auto">
+                    <p class="text-gray-500 text-center py-8">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expired & Recent Orders -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Expired Batches -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-times-circle text-red-600 mr-2"></i>
+                    Expired Batches
+                </h3>
+                <div id="expired_table" class="space-y-2 max-h-96 overflow-y-auto">
+                    <p class="text-gray-500 text-center py-8">Loading...</p>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-shopping-cart text-green-500 mr-2"></i>
+                    Recent Orders
+                </h3>
+                <div id="recent_orders_table" class="space-y-2 max-h-96 overflow-y-auto">
+                    <p class="text-gray-500 text-center py-8">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin.includes('localhost:5173') ? 'http://localhost:8000' : '';
+
+        async function loadDashboard() {
+            try {
+                console.log('🔄 Loading dashboard data...');
+                
+                const response = await fetch(`${API_BASE}/api/analytics/dashboard/realtime`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('📊 API Response:', result);
+                
+                if (!result.success) {
+                    throw new Error('API returned success: false');
+                }
+                
+                const { data } = result;
+                const { kpi } = data;
+                
+                // Update KPI values
+                document.getElementById('kpi_total_products').textContent = kpi.total_products || 0;
+                document.getElementById('kpi_critical_stock').textContent = kpi.critical_stock || 0;
+                document.getElementById('kpi_low_stock').textContent = kpi.low_stock || 0;
+                document.getElementById('kpi_near_expiry').textContent = kpi.near_expiry_count || 0;
+                document.getElementById('kpi_expired').textContent = kpi.expired_count || 0;
+                document.getElementById('kpi_month_orders').textContent = kpi.month_orders || 0;
+                
+                // Update revenue
+                document.getElementById('kpi_today_revenue').textContent = `₹${(kpi.today_revenue || 0).toLocaleString('en-IN')}`;
+                document.getElementById('kpi_month_revenue').textContent = `₹${(kpi.month_revenue || 0).toLocaleString('en-IN')}`;
+                document.getElementById('kpi_inventory_value').textContent = `₹${(kpi.inventory_value || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+                
+                // Update Low Stock Table
+                const lowStockHtml = (data.low_stock_products || []).map(p => `
+                    <div class="border-l-4 ${p.status === 'critical' ? 'border-red-500 bg-red-50' : 'border-yellow-500 bg-yellow-50'} p-3 rounded">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-semibold text-gray-800">${p.name}</p>
+                                <p class="text-sm text-gray-600">${p.category}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-3 py-1 rounded-full text-sm font-bold ${p.status === 'critical' ? 'bg-red-600 text-white' : 'bg-yellow-600 text-white'}">
+                                    ${p.current_stock} units
+                                </span>
+                                <p class="text-xs text-gray-600 mt-1">Min: ${p.min_stock}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('low_stock_table').innerHTML = lowStockHtml || 
+                    '<p class="text-center text-green-600 py-8"><i class="fas fa-check-circle mr-2"></i>All products well stocked!</p>';
+                
+                // Update Near Expiry Table
+                const nearExpiryHtml = (data.near_expiry_batches || []).map(b => `
+                    <div class="border-l-4 border-orange-500 bg-orange-50 p-3 rounded">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-semibold text-gray-800">${b.product_name}</p>
+                                <p class="text-sm text-gray-600">Batch: ${b.batch_no}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-3 py-1 rounded-full text-sm font-bold bg-orange-600 text-white">
+                                    ${b.days_until_expiry} days
+                                </span>
+                                <p class="text-xs text-gray-600 mt-1">${b.quantity} units - ₹${b.value.toLocaleString('en-IN')}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('near_expiry_table').innerHTML = nearExpiryHtml || 
+                    '<p class="text-center text-green-600 py-8"><i class="fas fa-check-circle mr-2"></i>No items expiring soon!</p>';
+                
+                // Update Expired Table
+                const expiredHtml = (data.expired_batches || []).map(b => `
+                    <div class="border-l-4 border-red-600 bg-red-50 p-3 rounded">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-semibold text-gray-800">${b.product_name}</p>
+                                <p class="text-sm text-gray-600">Batch: ${b.batch_no}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-3 py-1 rounded-full text-sm font-bold bg-red-700 text-white">
+                                    ${b.days_expired} days ago
+                                </span>
+                                <p class="text-xs text-gray-600 mt-1">${b.quantity} units - ₹${b.value.toLocaleString('en-IN')}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('expired_table').innerHTML = expiredHtml || 
+                    '<p class="text-center text-green-600 py-8"><i class="fas fa-check-circle mr-2"></i>No expired items!</p>';
+                
+                // Update Recent Orders
+                const ordersHtml = (data.recent_activity || []).filter(a => a.type === 'order').slice(0, 10).map(order => `
+                    <div class="border-l-4 border-blue-500 bg-blue-50 p-3 rounded">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-semibold text-gray-800">${order.description}</p>
+                                <p class="text-xs text-gray-600">${new Date(order.timestamp).toLocaleString()}</p>
+                            </div>
+                            <p class="font-bold text-green-600">₹${(order.amount || 0).toLocaleString('en-IN')}</p>
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('recent_orders_table').innerHTML = ordersHtml || 
+                    '<p class="text-center text-gray-500 py-8">No recent orders</p>';
+                
+                console.log('✅ Dashboard loaded successfully!');
+                
+            } catch (error) {
+                console.error('❌ Error loading dashboard:', error);
+                alert(`Failed to load dashboard: ${error.message}\n\nPlease check:\n1. Backend server is running\n2. Browser console for details`);
+            }
+        }
+        
+        // Load on page load
+        window.addEventListener('DOMContentLoaded', loadDashboard);
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadDashboard, 30000);
+    </script>
+</body>
+</html>

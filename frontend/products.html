@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - Product Management</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="max-w-4xl mx-auto p-4">
+    <header class="py-6">
+      <div class="flex gap-4 text-sm mb-4">
+        <button onclick="history.back()" class="text-sky-600 hover:text-sky-800">← Back</button>
+        <a href="/admin_dashboard.html" class="text-sky-600 hover:text-sky-800">🏠 Dashboard</a>
+        <button onclick="localStorage.removeItem('retail_jwt'); location.href='/login.html'" class="text-red-600 hover:text-red-800">Logout</button>
+      </div>
+      <h1 class="text-2xl font-bold text-sky-700">Product Management</h1>
+      <p class="text-sm text-slate-600">Add products, manage stores, and inventory</p>
+    </header>
+
+    <main class="space-y-6">
+      <!-- Add New Product - Enhanced UI -->
+      <section class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-xl overflow-hidden border border-blue-100">
+        <!-- Header with gradient -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold flex items-center gap-3">
+                <span class="text-3xl">🛍️</span>
+                <span>Add New Product</span>
+              </h2>
+              <p class="text-blue-100 text-sm mt-1">Fill in the details to add a product to your inventory</p>
+            </div>
+            <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+              <p class="text-xs text-blue-100">Quick Add</p>
+              <p class="text-lg font-bold">+New</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <form id="addProductForm" class="p-6 space-y-6">
+          <!-- Basic Information -->
+          <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">1</span>
+              Basic Information
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="relative">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <span class="flex items-center gap-2">
+                    <span>📦</span>
+                    Product Name <span class="text-red-500">*</span>
+                  </span>
+                </label>
+                <input name="name" placeholder="e.g., Premium Butter" 
+                  class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all" 
+                  required />
+              </div>
+              <div class="relative">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <span class="flex items-center gap-2">
+                    <span>💰</span>
+                    Price (₹) <span class="text-red-500">*</span>
+                  </span>
+                </label>
+                <input name="price" type="number" step="0.01" placeholder="0.00" 
+                  class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all" 
+                  required />
+              </div>
+            </div>
+          </div>
+
+          <!-- Store Selection -->
+          <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <span class="bg-orange-100 text-orange-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">2</span>
+              Store Assignment
+            </h3>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <span class="flex items-center gap-2">
+                  <span>🏪</span>
+                  Select Store <span class="text-red-500">*</span>
+                </span>
+              </label>
+              <select name="store_id" id="storeSelect"
+                class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all bg-white" 
+                required>
+                <option value="">Select a store...</option>
+              </select>
+              <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                <span>💡</span>
+                Assign this product to a specific store for tracking and analysis
+              </p>
+            </div>
+          </div>
+
+          <!-- Stock & Category -->
+          <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <span class="bg-green-100 text-green-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">3</span>
+              Stock & Category
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <span class="flex items-center gap-2">
+                    <span>📊</span>
+                    Initial Stock Quantity <span class="text-red-500">*</span>
+                  </span>
+                </label>
+                <input name="stock_quantity" type="number" min="0" placeholder="e.g., 50" 
+                  class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all" 
+                  required />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <span class="flex items-center gap-2">
+                    <span>⚠️</span>
+                    Minimum Stock Level <span class="text-red-500">*</span>
+                  </span>
+                </label>
+                <input name="min_stock_level" type="number" min="1" placeholder="e.g., 10" value="5"
+                  class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all" 
+                  required />
+                <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                  <span>💡</span>
+                  Alert when stock falls below this level
+                </p>
+              </div>
+            </div>
+            <div class="mt-4">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <span class="flex items-center gap-2">
+                  <span>🏷️</span>
+                  Category <span class="text-red-500">*</span>
+                </span>
+              </label>
+              <select name="category" onchange="updateSKUOptions()" 
+                class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all bg-white" 
+                required>
+                <option value="">Select Category</option>
+                <option value="Electronics">📱 Electronics</option>
+                <option value="Food">🍎 Food & Beverages</option>
+                <option value="Clothing">👕 Clothing & Fashion</option>
+                <option value="Home">🏠 Home & Garden</option>
+                <option value="Books">📚 Books & Media</option>
+                <option value="Sports">⚽ Sports & Outdoors</option>
+                <option value="Beauty">💄 Beauty & Personal Care</option>
+                <option value="Automotive">🚗 Automotive</option>
+                <option value="Toys">🧸 Toys & Games</option>
+                <option value="Health">💊 Health & Wellness</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Additional Details -->
+          <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <span class="bg-purple-100 text-purple-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">4</span>
+              Additional Details
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <span class="flex items-center gap-2">
+                    <span>🔖</span>
+                    SKU (Optional - Auto-generated if empty)
+                  </span>
+                </label>
+                <select name="sku" 
+                  class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all bg-white">
+                  <option value="">Auto-generate unique SKU</option>
+                </select>
+                <p class="text-xs text-green-600 mt-1 flex items-center gap-1">
+                  <span>✨</span>
+                  Leave empty for automatic unique SKU generation
+                </p>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <span class="flex items-center gap-2">
+                    <span>📅</span>
+                    Expiry Date (Optional)
+                  </span>
+                </label>
+                <input name="expiry_date" type="date" 
+                  class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <span class="flex items-center gap-2">
+                  <span>📝</span>
+                  Description (Optional)
+                </span>
+              </label>
+              <textarea name="description" placeholder="Enter product description, features, or notes..." rows="3" 
+                class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all resize-none"></textarea>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="flex gap-3">
+            <button type="submit" id="submitBtn"
+              class="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3">
+              <span class="text-2xl">✅</span>
+              <span>Add Product to Inventory</span>
+            </button>
+            <button type="button" onclick="document.getElementById('addProductForm').reset(); updateSKUOptions();"
+              class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-4 rounded-xl font-semibold transition-all">
+              🔄 Reset
+            </button>
+          </div>
+        </form>
+        
+        <!-- Message Area with enhanced styling -->
+        <div id="addProductMsg" class="px-6 pb-6"></div>
+      </section>
+
+      <!-- Add New Store -->
+      <section class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-xl overflow-hidden border border-indigo-100">
+        <!-- Header with gradient -->
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold flex items-center gap-3">
+                <span class="text-3xl">🏪</span>
+                <span>Store Management</span>
+              </h2>
+              <p class="text-indigo-100 text-sm mt-1">Add new stores to manage inventory across locations</p>
+            </div>
+            <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+              <p class="text-xs text-indigo-100">Quick Add</p>
+              <p class="text-lg font-bold">+Store</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <form id="addStoreForm" class="p-6 space-y-4">
+          <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <span class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">+</span>
+              Store Information
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <span class="flex items-center gap-2">
+                    <span>🏢</span>
+                    Store Name <span class="text-red-500">*</span>
+                  </span>
+                </label>
+                <input name="name" placeholder="e.g., Main Store" 
+                  class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all" 
+                  required />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <span class="flex items-center gap-2">
+                    <span>📍</span>
+                    Location <span class="text-red-500">*</span>
+                  </span>
+                </label>
+                <input name="location" placeholder="City, District, State" 
+                  class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all" 
+                  required />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <span class="flex items-center gap-2">
+                    <span>👤</span>
+                    Manager Name
+                  </span>
+                </label>
+                <input name="manager" placeholder="Store Manager" 
+                  class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all" />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Submit Button -->
+          <div class="flex gap-3">
+            <button type="submit" id="addStoreBtn"
+              class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3">
+              <span class="text-2xl">🏪</span>
+              <span>Add Store</span>
+            </button>
+            <button type="button" onclick="document.getElementById('addStoreForm').reset();"
+              class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-4 rounded-xl font-semibold transition-all">
+              🔄 Reset
+            </button>
+          </div>
+        </form>
+        
+        <!-- Message Area -->
+        <div id="addStoreMsg" class="px-6 pb-6"></div>
+      </section>
+
+      <!-- Current Products -->
+      <section class="p-4 bg-white rounded-lg shadow">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="font-semibold">📦 Current Products</h2>
+          <button onclick="loadProducts()" class="text-blue-600 hover:text-blue-800 text-sm">
+            🔄 Refresh
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b bg-gray-50">
+                <th class="text-left p-3 font-medium">Product Name</th>
+                <th class="text-left p-3 font-medium">Price</th>
+                <th class="text-left p-3 font-medium">Category</th>
+                <th class="text-left p-3 font-medium">SKU</th>
+                <th class="text-left p-3 font-medium">Stock</th>
+                <th class="text-left p-3 font-medium">Min Stock</th>
+                <th class="text-left p-3 font-medium">Expiry Date</th>
+                <th class="text-left p-3 font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="productsTable">
+              <tr><td colspan="8" class="p-8 text-center text-gray-500">🔄 Loading products...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Bulk Upload -->
+      <section class="p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-3">Bulk Upload Products</h2>
+        <form id="bulkUploadForm" class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium mb-1">Upload CSV/Excel file</label>
+            <input type="file" name="file" accept=".csv,.xlsx,.xls" class="border rounded p-2 w-full" required />
+            <div class="text-xs text-slate-500 mt-1">
+              Expected columns: name, price, stock_quantity, min_stock_level, category, sku, description, expiry_date
+            </div>
+          </div>
+          <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">Upload Products</button>
+        </form>
+        <div id="bulkUploadMsg" class="text-sm mt-2"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    console.log('Product management page loaded');
+    
+    // SKU defaults for different categories
+    const SKU_DEFAULTS = {
+      'Electronics': [
+        'ELE-PHONE-001', 'ELE-LAPTOP-002', 'ELE-TABLET-003', 'ELE-WATCH-004', 'ELE-CAMERA-005',
+        'ELE-SPEAKER-006', 'ELE-HEADPHONE-007', 'ELE-CHARGER-008', 'ELE-CABLE-009', 'ELE-MOUSE-010'
+      ],
+      'Food': [
+        'FOOD-SNACK-001', 'FOOD-DRINK-002', 'FOOD-FRUIT-003', 'FOOD-VEGGIE-004', 'FOOD-MEAT-005',
+        'FOOD-DAIRY-006', 'FOOD-BREAD-007', 'FOOD-CEREAL-008', 'FOOD-SAUCE-009', 'FOOD-SPICE-010'
+      ],
+      'Clothing': [
+        'CLO-SHIRT-001', 'CLO-PANTS-002', 'CLO-DRESS-003', 'CLO-SHOES-004', 'CLO-HAT-005',
+        'CLO-JACKET-006', 'CLO-SOCKS-007', 'CLO-BELT-008', 'CLO-GLOVES-009', 'CLO-SCARF-010'
+      ],
+      'Home': [
+        'HOME-FURNITURE-001', 'HOME-DECOR-002', 'HOME-KITCHEN-003', 'HOME-BATH-004', 'HOME-GARDEN-005',
+        'HOME-TOOL-006', 'HOME-CLEAN-007', 'HOME-STORAGE-008', 'HOME-LIGHT-009', 'HOME-TEXTILE-010'
+      ],
+      'Books': [
+        'BOOK-FICTION-001', 'BOOK-NONFIC-002', 'BOOK-TEXTBOOK-003', 'BOOK-MAGAZINE-004', 'BOOK-COMIC-005',
+        'BOOK-EBOOK-006', 'BOOK-AUDIO-007', 'BOOK-JOURNAL-008', 'BOOK-GUIDE-009', 'BOOK-REFERENCE-010'
+      ],
+      'Sports': [
+        'SPORT-BALL-001', 'SPORT-EQUIP-002', 'SPORT-WEAR-003', 'SPORT-SHOES-004', 'SPORT-FITNESS-005',
+        'SPORT-OUTDOOR-006', 'SPORT-WATER-007', 'SPORT-BIKE-008', 'SPORT-GAME-009', 'SPORT-SAFETY-010'
+      ],
+      'Beauty': [
+        'BEAUTY-MAKEUP-001', 'BEAUTY-SKIN-002', 'BEAUTY-HAIR-003', 'BEAUTY-PERFUME-004', 'BEAUTY-NAIL-005',
+        'BEAUTY-TOOL-006', 'BEAUTY-BATH-007', 'BEAUTY-SUN-008', 'BEAUTY-MEN-009', 'BEAUTY-ORGANIC-010'
+      ],
+      'Automotive': [
+        'AUTO-PART-001', 'AUTO-OIL-002', 'AUTO-TIRE-003', 'AUTO-BATTERY-004', 'AUTO-FILTER-005',
+        'AUTO-TOOL-006', 'AUTO-ACCESSORY-007', 'AUTO-CLEAN-008', 'AUTO-ELECTRONIC-009', 'AUTO-SAFETY-010'
+      ],
+      'Toys': [
+        'TOY-ACTION-001', 'TOY-DOLL-002', 'TOY-PUZZLE-003', 'TOY-BOARD-004', 'TOY-BUILDING-005',
+        'TOY-VEHICLE-006', 'TOY-EDUCATIONAL-007', 'TOY-CRAFT-008', 'TOY-OUTDOOR-009', 'TOY-ELECTRONIC-010'
+      ],
+      'Health': [
+        'HEALTH-VITAMIN-001', 'HEALTH-MEDICINE-002', 'HEALTH-FIRST-003', 'HEALTH-FITNESS-004', 'HEALTH-DENTAL-005',
+        'HEALTH-VISION-006', 'HEALTH-MOBILITY-007', 'HEALTH-MONITOR-008', 'HEALTH-THERAPY-009', 'HEALTH-NATURAL-010'
+      ]
+    };
+    
+    // Load stores for dropdown
+    async function loadStores() {
+      try {
+        const response = await fetch(API_BASE + '/api/admin/store-performance', {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('retail_jwt')
+          }
+        });
+        const result = await response.json();
+        
+        const storeSelect = document.getElementById('storeSelect');
+        if (result.success && result.data && result.data.length > 0) {
+          storeSelect.innerHTML = '<option value="">Select a store...</option>';
+          result.data.forEach(store => {
+            const option = document.createElement('option');
+            option.value = store.id;
+            option.textContent = `${store.name} - ${store.location}`;
+            storeSelect.appendChild(option);
+          });
+          console.log(`✅ Loaded ${result.data.length} stores`);
+        } else {
+          storeSelect.innerHTML = '<option value="">No stores available</option>';
+          console.warn('No stores found');
+        }
+      } catch (error) {
+        console.error('Failed to load stores:', error);
+        document.getElementById('storeSelect').innerHTML = '<option value="">Error loading stores</option>';
+      }
+    }
+    
+    // Update SKU options based on selected category
+    function updateSKUOptions() {
+      const categorySelect = document.querySelector('select[name="category"]');
+      const skuSelect = document.querySelector('select[name="sku"]');
+      const selectedCategory = categorySelect.value;
+      
+      // Clear existing options
+      skuSelect.innerHTML = '';
+      
+      if (selectedCategory && SKU_DEFAULTS[selectedCategory]) {
+        skuSelect.innerHTML = '<option value="">Select SKU</option>';
+        
+        SKU_DEFAULTS[selectedCategory].forEach(sku => {
+          const option = document.createElement('option');
+          option.value = sku;
+          option.textContent = sku;
+          skuSelect.appendChild(option);
+        });
+        
+        // Add custom option
+        const customOption = document.createElement('option');
+        customOption.value = 'CUSTOM';
+        customOption.textContent = '✏️ Enter Custom SKU';
+        skuSelect.appendChild(customOption);
+        
+      } else {
+        skuSelect.innerHTML = '<option value="">Select Category First</option>';
+      }
+    }
+    
+    // Handle custom SKU input
+    document.querySelector('select[name="sku"]').addEventListener('change', function() {
+      if (this.value === 'CUSTOM') {
+        const customSKU = prompt('Enter custom SKU:');
+        if (customSKU) {
+          const option = document.createElement('option');
+          option.value = customSKU;
+          option.textContent = customSKU;
+          option.selected = true;
+          this.insertBefore(option, this.lastElementChild);
+        }
+      }
+    });
+    
+    const API_BASE = window.location.origin.startsWith('http://localhost:5173')
+      ? 'http://localhost:8000'
+      : '';
+    const TOKEN_KEY = 'retail_jwt';
+    
+    function getAuthHeaders() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      };
+    }
+
+    // Add Product Form
+    document.getElementById('addProductForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('addProductMsg');
+      const submitBtn = document.getElementById('submitBtn');
+      
+      // Show loading state with animation
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="animate-spin">⏳</span> <span>Adding Product...</span>';
+      msg.innerHTML = `
+        <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg flex items-center gap-3 animate-pulse">
+          <span class="text-2xl">⏳</span>
+          <span class="font-semibold">Adding product to inventory...</span>
+        </div>
+      `;
+      
+      const fd = new FormData(e.target);
+      const body = {
+        name: fd.get('name'),
+        price: parseFloat(fd.get('price')),
+        stock_quantity: parseInt(fd.get('stock_quantity')) || 0,
+        min_stock_level: parseInt(fd.get('min_stock_level')) || 5,
+        category: fd.get('category'),
+        sku: fd.get('sku') || '',  // Empty string for auto-generation
+        description: fd.get('description') || '',
+        expiry_date: fd.get('expiry_date') || null,
+        store_id: parseInt(fd.get('store_id')) || null
+      };
+      
+      console.log('Adding product:', body);
+      
+      try {
+        const response = await fetch(API_BASE + '/api/products/', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('retail_jwt')
+          },
+          body: JSON.stringify(body)
+        });
+        
+        const result = await response.json();
+        console.log('Add product result:', result);
+        
+        if (response.ok && result.success) {
+          // Success message with SKU info
+          const skuInfo = result.meta?.message || `Product added with SKU: ${result.data.sku}`;
+          msg.innerHTML = `
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg shadow-lg animate-fadeIn">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-3xl">✅</span>
+                <span class="font-bold text-lg">Product Added Successfully!</span>
+              </div>
+              <p class="ml-11 text-sm">${skuInfo}</p>
+              <p class="ml-11 text-xs mt-1 opacity-75">Product ID: ${result.data.id} | Stock: ${result.data.stock_quantity} units</p>
+            </div>
+          `;
+          e.target.reset();
+          updateSKUOptions(); // Reset SKU dropdown
+          loadProducts();
+          
+          // Auto-hide success message after 5 seconds
+          setTimeout(() => {
+            msg.innerHTML = '';
+          }, 5000);
+        } else {
+          throw new Error(result.meta?.error || 'Failed to add product');
+        }
+        
+      } catch (error) {
+        console.error('Add product error:', error);
+        msg.innerHTML = `
+          <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-lg">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="text-3xl">❌</span>
+              <span class="font-bold text-lg">Error Adding Product</span>
+            </div>
+            <p class="ml-11 text-sm">${error.message}</p>
+            <p class="ml-11 text-xs mt-2 opacity-75">💡 Tip: SKU must be unique. Leave it empty for auto-generation.</p>
+          </div>
+        `;
+      } finally {
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span class="text-2xl">✅</span> <span>Add Product to Inventory</span>';
+      }
+    });
+
+    // Load Products
+    async function loadProducts() {
+      try {
+        console.log('Loading products...');
+        const response = await fetch(API_BASE + '/api/products/', {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('retail_jwt')
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Products loaded:', result);
+        
+        const tbody = document.getElementById('productsTable');
+        
+        if (result.success && result.data && result.data.length > 0) {
+          tbody.innerHTML = result.data.map(p => {
+            const stockLevel = p.stock_quantity || 0;
+            const minStock = p.min_stock_level || 5;
+            const stockStatus = stockLevel === 0 ? 'out' : stockLevel < minStock ? 'low' : 'normal';
+            
+            return `
+            <tr class="border-b hover:bg-gray-50">
+              <td class="p-3 font-medium">${p.name}</td>
+              <td class="p-3">
+                <span class="font-medium text-gray-900">₹${parseFloat(p.price).toFixed(2)}</span>
+              </td>
+              <td class="p-3">
+                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                  ${p.category || 'General'}
+                </span>
+              </td>
+              <td class="p-3 font-mono text-sm">${p.sku || 'N/A'}</td>
+              <td class="p-3">
+                <span class="px-2 py-1 text-xs rounded-full font-medium ${
+                  stockStatus === 'out' ? 'bg-red-100 text-red-800' :
+                  stockStatus === 'low' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-green-100 text-green-800'
+                }">
+                  ${stockLevel}
+                </span>
+              </td>
+              <td class="p-3 text-sm">${minStock}</td>
+              <td class="p-3 text-sm">${p.expiry_date || 'No expiry'}</td>
+              <td class="p-3">
+                <button onclick="updateStock(${p.id}, ${stockLevel}, ${minStock})" class="text-green-600 hover:text-green-800 text-sm mr-2">📦 Stock</button>
+                <button onclick="editProduct(${p.id})" class="text-blue-600 hover:text-blue-800 text-sm mr-2">✏️ Edit</button>
+                <button onclick="deleteProduct(${p.id})" class="text-red-600 hover:text-red-800 text-sm">🗑️ Delete</button>
+              </td>
+            </tr>
+          `;
+          }).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-gray-500">📦 No products found. Add your first product above!</td></tr>';
+        }
+        
+      } catch (error) {
+        console.error('Load products error:', error);
+        const tbody = document.getElementById('productsTable');
+        tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-red-500">❌ Error loading products</td></tr>';
+      }
+    }
+
+    // Update Stock Function
+    async function updateStock(productId, currentStock, minStock) {
+      const newStock = prompt(`Update stock quantity for product ID ${productId}:\nCurrent stock: ${currentStock}\nMinimum stock: ${minStock}`, currentStock);
+      if (newStock === null) return;
+      
+      const stockQuantity = parseInt(newStock);
+      if (isNaN(stockQuantity) || stockQuantity < 0) {
+        alert('❌ Please enter a valid stock quantity (0 or greater)');
+        return;
+      }
+      
+      try {
+        console.log('Updating stock:', productId, stockQuantity);
+        const response = await fetch(API_BASE + `/api/products/${productId}/restock`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('retail_jwt')
+          },
+          body: JSON.stringify({ stock_quantity: stockQuantity })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Stock update result:', result);
+        
+        if (result.success) {
+          alert('✅ Stock updated successfully!');
+          loadProducts(); // Refresh the table
+        } else {
+          throw new Error(result.meta?.error || 'Failed to update stock');
+        }
+        
+      } catch (error) {
+        console.error('Update stock error:', error);
+        alert(`❌ Failed to update stock: ${error.message}`);
+      }
+    }
+
+    // Delete Product
+    async function deleteProduct(id) {
+      if (!confirm('🗑️ Are you sure you want to delete this product?')) return;
+      
+      try {
+        console.log('Deleting product:', id);
+        const response = await fetch(API_BASE + `/api/products/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('retail_jwt')
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Delete result:', result);
+        
+        if (result.success) {
+          alert('✅ Product deleted successfully!');
+          loadProducts();
+        } else {
+          throw new Error(result.meta?.error || 'Failed to delete product');
+        }
+        
+      } catch (error) {
+        console.error('Delete product error:', error);
+        alert(`❌ Failed to delete product: ${error.message}`);
+      }
+    }
+    
+    // Edit product
+    async function editProduct(id) {
+      try {
+        // Get current product data
+        const response = await fetch(API_BASE + '/api/products/', {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('retail_jwt')
+          }
+        });
+        
+        const result = await response.json();
+        if (!result.success) throw new Error('Failed to fetch products');
+        
+        const product = result.data.find(p => p.id === id);
+        if (!product) {
+          alert('❌ Product not found!');
+          return;
+        }
+        
+        // Create edit form with current values
+        const newName = prompt('Product Name:', product.name);
+        if (newName === null) return; // Cancelled
+        
+        const newPrice = prompt('Price:', product.price);
+        if (newPrice === null) return;
+        
+        const newStock = prompt('Stock Quantity:', product.stock_quantity);
+        if (newStock === null) return;
+        
+        const newMinStock = prompt('Minimum Stock Level:', product.min_stock_level);
+        if (newMinStock === null) return;
+        
+        const newDescription = prompt('Description:', product.description || '');
+        if (newDescription === null) return;
+        
+        // Update product
+        const updateResponse = await fetch(API_BASE + `/api/products/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('retail_jwt')
+          },
+          body: JSON.stringify({
+            name: newName,
+            price: parseFloat(newPrice),
+            stock_quantity: parseInt(newStock),
+            min_stock_level: parseInt(newMinStock),
+            description: newDescription
+          })
+        });
+        
+        if (!updateResponse.ok) {
+          throw new Error(`HTTP ${updateResponse.status}`);
+        }
+        
+        const updateResult = await updateResponse.json();
+        
+        if (updateResult.success) {
+          alert('✅ Product updated successfully!');
+          loadProducts(); // Refresh the table
+        } else {
+          throw new Error(updateResult.meta?.error || 'Failed to update product');
+        }
+        
+      } catch (error) {
+        console.error('Edit product error:', error);
+        alert(`❌ Failed to edit product: ${error.message}`);
+      }
+    }
+
+    // Add Store Form Handler
+    document.getElementById('addStoreForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('addStoreMsg');
+      const submitBtn = document.getElementById('addStoreBtn');
+      
+      // Show loading state
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="animate-spin">⏳</span> <span>Adding Store...</span>';
+      msg.innerHTML = `
+        <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg flex items-center gap-3 animate-pulse">
+          <span class="text-2xl">⏳</span>
+          <span class="font-semibold">Adding store to system...</span>
+        </div>
+      `;
+      
+      const fd = new FormData(e.target);
+      const body = {
+        name: fd.get('name'),
+        location: fd.get('location'),
+        manager: fd.get('manager') || `Manager - ${fd.get('name')}`
+      };
+      
+      console.log('Adding store:', body);
+      
+      try {
+        const response = await fetch(API_BASE + '/api/admin/stores/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('retail_jwt')
+          },
+          body: JSON.stringify(body)
+        });
+        
+        const result = await response.json();
+        console.log('Add store result:', result);
+        
+        if (response.ok && result.success) {
+          msg.innerHTML = `
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg shadow-lg">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-3xl">✅</span>
+                <span class="font-bold text-lg">Store Added Successfully!</span>
+              </div>
+              <p class="ml-11 text-sm">${result.meta?.message || 'Store has been added to the system'}</p>
+              <p class="ml-11 text-xs mt-1 opacity-75">Store ID: ${result.data.id} | ${result.data.name}</p>
+            </div>
+          `;
+          e.target.reset();
+          
+          // Reload stores dropdown
+          await loadStores();
+          
+          // Auto-hide success message after 5 seconds
+          setTimeout(() => {
+            msg.innerHTML = '';
+          }, 5000);
+        } else {
+          throw new Error(result.meta?.error || 'Failed to add store');
+        }
+      } catch (error) {
+        console.error('Add store error:', error);
+        msg.innerHTML = `
+          <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-lg">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">❌</span>
+              <div>
+                <p class="font-bold">Failed to Add Store</p>
+                <p class="text-sm">${error.message}</p>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        setTimeout(() => {
+          msg.innerHTML = '';
+        }, 5000);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span class="text-2xl">🏪</span><span>Add Store</span>';
+      }
+    });
+
+    // Load products and stores on page load
+    loadProducts();
+    loadStores();
+  </script>
+</body>
+</html>

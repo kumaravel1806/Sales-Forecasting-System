@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RetailForecaster - Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    .animate-fadeInUp {
+      animation: fadeInUp 0.8s ease-out;
+    }
+    
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .animate-pulse-slow {
+      animation: pulse 3s ease-in-out infinite;
+    }
+    
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+    }
+    
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .hover-lift {
+      transition: all 0.3s ease;
+    }
+    
+    .hover-lift:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+    
+    .input-focus {
+      transition: all 0.3s ease;
+    }
+    
+    .input-focus:focus {
+      transform: scale(1.02);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+    }
+    
+    .loading-spinner {
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #3b82f6;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .tab-active {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      color: white;
+    }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+  <!-- Animated Background Elements -->
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute -top-10 -left-10 w-40 h-40 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float"></div>
+    <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style="animation-delay: 2s;"></div>
+    <div class="absolute top-1/2 left-1/3 w-32 h-32 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style="animation-delay: 4s;"></div>
+  </div>
+
+  <!-- Main Login Container -->
+  <div class="relative z-10 w-full max-w-6xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+      
+      <!-- Left Panel - Welcome Section -->
+      <div class="text-white animate-fadeInUp">
+        <div class="mb-8">
+          <div class="flex items-center space-x-3 mb-6">
+            <div class="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+              <i class="fas fa-chart-line text-3xl"></i>
+            </div>
+            <div>
+              <h1 class="text-4xl font-bold">RetailForecaster</h1>
+              <p class="text-xl text-blue-100">AI-Powered Analytics</p>
+            </div>
+          </div>
+          
+          <p class="text-lg mb-6 text-blue-100">
+            Transform your retail business with intelligent forecasting, real-time analytics, and data-driven insights.
+          </p>
+          
+          <div class="space-y-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <i class="fas fa-brain"></i>
+              </div>
+              <span>AI-Powered Predictions</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <i class="fas fa-chart-bar"></i>
+              </div>
+              <span>Real-Time Analytics</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <i class="fas fa-store"></i>
+              </div>
+              <span>Multi-Store Management</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <i class="fas fa-rupee-sign"></i>
+              </div>
+              <span>Indian Market Optimized</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-8 p-4 bg-white bg-opacity-10 rounded-xl backdrop-blur-sm">
+          <p class="text-sm mb-2">🔒 Secure & Trusted Platform</p>
+          <div class="flex space-x-2">
+            <i class="fas fa-shield-alt text-green-300"></i>
+            <i class="fas fa-lock text-green-300"></i>
+            <i class="fas fa-check-circle text-green-300"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel - Login Form -->
+      <div class="glass-effect rounded-2xl shadow-2xl p-8 animate-fadeInUp hover-lift" style="animation-delay: 0.2s;">
+        
+        <!-- Tab Navigation -->
+        <div class="flex mb-8 bg-gray-100 rounded-lg p-1">
+          <button onclick="switchTab('login')" id="loginTab" class="flex-1 py-3 px-4 rounded-lg font-medium transition-all tab-active">
+            <i class="fas fa-sign-in-alt mr-2"></i>Login
+          </button>
+          <button onclick="switchTab('register')" id="registerTab" class="flex-1 py-3 px-4 rounded-lg font-medium transition-all text-gray-600 hover:text-gray-800">
+            <i class="fas fa-user-plus mr-2"></i>Register
+          </button>
+        </div>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="space-y-6">
+          <!-- Quick Login Options (for demo only; customer quick access uses John) -->
+          <div class="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+            <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+              <i class="fas fa-bolt text-yellow-500 mr-2"></i>
+              Quick Access
+            </h3>
+            <div class="grid grid-cols-1 gap-3">
+              <button onclick="quickLogin('admin@example.com', 'password')" 
+                      class="group bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-between">
+                <span><i class="fas fa-crown mr-2"></i>Admin Dashboard</span>
+                <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+              </button>
+              <button onclick="quickLogin('john@example.com', 'password123')" 
+                      class="group bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-between">
+                <span><i class="fas fa-shopping-cart mr-2"></i>Customer Portal (John)</span>
+                <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+              </button>
+            </div>
+            <div id="quickMsg" class="mt-3 text-sm"></div>
+          </div>
+
+          <!-- Manual Login -->
+          <div class="space-y-4">
+            <div class="text-center mb-4">
+              <p class="text-gray-600">or login with your credentials</p>
+            </div>
+            
+            <div class="relative">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="fas fa-envelope mr-1 text-gray-400"></i>Email Address
+              </label>
+              <input id="email" type="email" value="" placeholder="Enter your email" 
+                     class="input-focus w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+            </div>
+            
+            <div class="relative">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="fas fa-lock mr-1 text-gray-400"></i>Password
+              </label>
+              <div class="relative">
+                <input id="password" type="password" value="" placeholder="Enter your password" 
+                       class="input-focus w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                <button type="button" onclick="togglePassword()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <i id="passwordToggle" class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <label class="flex items-center">
+                <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                <span class="ml-2 text-sm text-gray-600">Remember me</span>
+              </label>
+              <a href="#" class="text-sm text-blue-600 hover:text-blue-800 transition-colors">Forgot password?</a>
+            </div>
+            
+            <button onclick="manualLogin()" id="loginBtn" 
+                    class="btn-primary w-full text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center">
+              <i class="fas fa-sign-in-alt mr-2"></i>
+              <span id="loginBtnText">Sign In</span>
+            </button>
+            
+            <div id="loginMsg" class="text-sm"></div>
+          </div>
+        </div>
+
+        <!-- Register Section -->
+        <div id="registerSection" class="space-y-4 hidden">
+          <div class="text-center mb-6">
+            <p class="text-gray-600">Create your account to get started</p>
+          </div>
+          
+          <div class="relative">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              <i class="fas fa-user mr-1 text-gray-400"></i>Full Name
+            </label>
+            <input id="regName" type="text" placeholder="Enter your full name" 
+                   class="input-focus w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500" />
+          </div>
+          
+          <div class="relative">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              <i class="fas fa-envelope mr-1 text-gray-400"></i>Email Address
+            </label>
+            <input id="regEmail" type="email" placeholder="Enter your email" 
+                   class="input-focus w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500" />
+          </div>
+          
+          <div class="relative">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              <i class="fas fa-lock mr-1 text-gray-400"></i>Password
+            </label>
+            <input id="regPassword" type="password" placeholder="Create a strong password" 
+                   class="input-focus w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500" />
+          </div>
+          
+          <div class="flex items-center">
+            <input type="checkbox" id="agreeTerms" class="rounded border-gray-300 text-green-600 focus:ring-green-500">
+            <label for="agreeTerms" class="ml-2 text-sm text-gray-600">
+              I agree to the <a href="#" class="text-blue-600 hover:text-blue-800">Terms & Conditions</a>
+            </label>
+          </div>
+          
+          <button onclick="registerUser()" id="registerBtn"
+                  class="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl font-medium transition-all flex items-center justify-center">
+            <i class="fas fa-user-plus mr-2"></i>
+            <span id="registerBtnText">Create Account</span>
+          </button>
+          
+          <div id="regMsg" class="text-sm"></div>
+        </div>
+
+        <!-- Test Accounts Info removed to encourage real registration/login -->
+
+        <div class="mt-6 text-center">
+         </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 transform scale-0 transition-transform" id="successModalContent">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-check text-green-600 text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">Success!</h3>
+        <p id="successMessage" class="text-gray-600 mb-4">Operation completed successfully</p>
+        <button onclick="closeSuccessModal()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('Modern login page loaded');
+    
+    // Tab switching
+    function switchTab(tab) {
+      const loginTab = document.getElementById('loginTab');
+      const registerTab = document.getElementById('registerTab');
+      const loginSection = document.getElementById('loginSection');
+      const registerSection = document.getElementById('registerSection');
+      
+      if (tab === 'login') {
+        loginTab.classList.add('tab-active');
+        registerTab.classList.remove('tab-active');
+        registerTab.classList.add('text-gray-600');
+        loginSection.classList.remove('hidden');
+        registerSection.classList.add('hidden');
+      } else {
+        registerTab.classList.add('tab-active');
+        loginTab.classList.remove('tab-active');
+        loginTab.classList.add('text-gray-600');
+        registerSection.classList.remove('hidden');
+        loginSection.classList.add('hidden');
+      }
+    }
+    
+    // Password visibility toggle
+    function togglePassword() {
+      const passwordField = document.getElementById('password');
+      const toggleIcon = document.getElementById('passwordToggle');
+      
+      if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+      } else {
+        passwordField.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
+      }
+    }
+    
+    // Show loading state
+    function setLoading(buttonId, textId, loading) {
+      const button = document.getElementById(buttonId);
+      const text = document.getElementById(textId);
+      
+      if (loading) {
+        button.disabled = true;
+        text.innerHTML = '<div class="loading-spinner inline-block mr-2"></div>Processing...';
+      } else {
+        button.disabled = false;
+        text.textContent = textId === 'loginBtnText' ? 'Sign In' : 'Create Account';
+      }
+    }
+    
+    // Show success modal
+    function showSuccessModal(message) {
+      const modal = document.getElementById('successModal');
+      const modalContent = document.getElementById('successModalContent');
+      const messageEl = document.getElementById('successMessage');
+      
+      messageEl.textContent = message;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      
+      setTimeout(() => {
+        modalContent.classList.add('scale-100');
+      }, 100);
+    }
+    
+    // Close success modal
+    function closeSuccessModal() {
+      const modal = document.getElementById('successModal');
+      const modalContent = document.getElementById('successModalContent');
+      
+      modalContent.classList.remove('scale-100');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }, 300);
+    }
+    
+    // Quick login function
+    async function quickLogin(email, password) {
+      const msg = document.getElementById('quickMsg');
+      msg.innerHTML = '<span class="text-blue-600"><i class="fas fa-spinner fa-spin mr-2"></i>Logging in...</span>';
+      
+      try {
+        console.log('Quick login attempt:', email);
+        
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Quick login result:', result);
+        
+        if (result.success && result.data && result.data.token) {
+          localStorage.setItem('retail_jwt', result.data.token);
+          localStorage.setItem('retail_user', JSON.stringify(result.data.user || {}));
+          
+          msg.innerHTML = '<span class="text-green-600"><i class="fas fa-check mr-2"></i>Success! Redirecting...</span>';
+          
+          const isAdmin = result.data.user && result.data.user.role === 'admin';
+          const redirectUrl = isAdmin ? '/admin_dashboard.html' : '/';
+          
+          console.log('Redirecting to:', redirectUrl);
+          setTimeout(() => window.location.href = redirectUrl, 1000);
+          
+        } else {
+          throw new Error(result.meta?.error || 'Login failed');
+        }
+        
+      } catch (error) {
+        console.error('Quick login error:', error);
+        msg.innerHTML = `<span class="text-red-600"><i class="fas fa-exclamation-triangle mr-2"></i>${error.message}</span>`;
+      }
+    }
+    
+    // Manual login
+    async function manualLogin() {
+      const msg = document.getElementById('loginMsg');
+      setLoading('loginBtn', 'loginBtnText', true);
+      msg.innerHTML = '';
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      if (!email || !password) {
+        msg.innerHTML = '<span class="text-red-600"><i class="fas fa-exclamation-triangle mr-2"></i>Please fill all fields</span>';
+        setLoading('loginBtn', 'loginBtnText', false);
+        return;
+      }
+      
+      try {
+        console.log('Manual login attempt:', email);
+        
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        
+        if (!response.ok) {
+          let errMsg = `HTTP ${response.status}`;
+          try {
+            const errData = await response.json();
+            if (errData.meta && errData.meta.error) {
+              errMsg = errData.meta.error;
+            }
+          } catch (_) {}
+
+          if (response.status === 401 || errMsg === 'invalid_credentials') {
+            errMsg = 'Invalid email or password';
+          }
+          throw new Error(errMsg);
+        }
+        
+        const data = await response.json();
+        console.log('Manual login response:', data);
+        
+        if (data.success && data.data && data.data.token) {
+          localStorage.setItem('retail_jwt', data.data.token);
+          localStorage.setItem('retail_user', JSON.stringify(data.data.user || {}));
+          
+          msg.innerHTML = '<span class="text-green-600"><i class="fas fa-check mr-2"></i>Success! Redirecting...</span>';
+          
+          const redirectUrl = data.data.user.role === 'admin' ? '/admin_dashboard.html' : '/';
+          console.log('Redirecting to:', redirectUrl);
+          
+          setTimeout(() => window.location.href = redirectUrl, 1000);
+          
+        } else {
+          throw new Error(data.meta?.error || 'Login failed');
+        }
+        
+      } catch (error) {
+        console.error('Manual login error:', error);
+        msg.innerHTML = `<span class="text-red-600"><i class="fas fa-exclamation-triangle mr-2"></i>${error.message}</span>`;
+      } finally {
+        setLoading('loginBtn', 'loginBtnText', false);
+      }
+    }
+    
+    // User registration
+    async function registerUser() {
+      const msg = document.getElementById('regMsg');
+      setLoading('registerBtn', 'registerBtnText', true);
+      msg.innerHTML = '';
+      
+      const name = document.getElementById('regName').value;
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+      const agreeTerms = document.getElementById('agreeTerms').checked;
+      
+      if (!name || !email || !password) {
+        msg.innerHTML = '<span class="text-red-600"><i class="fas fa-exclamation-triangle mr-2"></i>Please fill all fields</span>';
+        setLoading('registerBtn', 'registerBtnText', false);
+        return;
+      }
+      
+      if (!agreeTerms) {
+        msg.innerHTML = '<span class="text-red-600"><i class="fas fa-exclamation-triangle mr-2"></i>Please agree to terms & conditions</span>';
+        setLoading('registerBtn', 'registerBtnText', false);
+        return;
+      }
+      
+      try {
+        console.log('Registration attempt:', email);
+        
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: name,
+            email: email,
+            password: password
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Registration response:', data);
+        
+        if (data.success) {
+          showSuccessModal('Account created successfully! You can now login.');
+          
+          // Clear form and switch to login tab
+          document.getElementById('regName').value = '';
+          document.getElementById('regEmail').value = '';
+          document.getElementById('regPassword').value = '';
+          document.getElementById('agreeTerms').checked = false;
+          
+          setTimeout(() => {
+            switchTab('login');
+            document.getElementById('email').value = email;
+            document.getElementById('email').focus();
+          }, 2000);
+          
+        } else {
+          throw new Error(data.meta?.error || 'Registration failed');
+        }
+        
+      } catch (error) {
+        console.error('Registration error:', error);
+        msg.innerHTML = `<span class="text-red-600"><i class="fas fa-exclamation-triangle mr-2"></i>${error.message}</span>`;
+      } finally {
+        setLoading('registerBtn', 'registerBtnText', false);
+      }
+    }
+    
+    // Add enter key support for login
+    document.getElementById('password').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        manualLogin();
+      }
+    });
+    
+    document.getElementById('regPassword').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        registerUser();
+      }
+    });
+  </script>
+</body>
+</html>

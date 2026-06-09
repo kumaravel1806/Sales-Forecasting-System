@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - Data Upload & Cleaning</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="max-w-xl mx-auto p-4">
+    <header class="py-6">
+      <div class="flex gap-4 text-sm mb-4">
+        <button onclick="history.back()" class="text-sky-600 hover:text-sky-800">← Back</button>
+        <a href="/admin_dashboard.html" class="text-sky-600 hover:text-sky-800">🏠 Dashboard</a>
+        <button onclick="localStorage.removeItem('retail_jwt'); location.href='/login.html'" class="text-red-600 hover:text-red-800">Logout</button>
+      </div>
+      <h1 class="text-2xl font-bold text-sky-700 mt-2">Admin: Upload & Clean Dataset</h1>
+    </header>
+
+    <main class="space-y-4">
+      <section class="p-4 bg-white rounded-lg shadow">
+        <form id="uploadForm" class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium mb-1">CSV / Excel file</label>
+            <input type="file" name="file" accept=".csv,.xlsx,.xls" class="w-full border rounded p-2" required />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">📊 Data Processing Options</label>
+            <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded">
+              <label class="flex items-center space-x-2">
+                <input type="checkbox" name="clean_data" checked class="rounded">
+                <span class="text-sm">🧹 Clean Data</span>
+              </label>
+              <label class="flex items-center space-x-2">
+                <input type="checkbox" name="remove_duplicates" checked class="rounded">
+                <span class="text-sm">🔄 Remove Duplicates</span>
+              </label>
+              <label class="flex items-center space-x-2">
+                <input type="checkbox" name="auto_charts" checked class="rounded">
+                <span class="text-sm">📈 Auto Generate Charts</span>
+              </label>
+              <label class="flex items-center space-x-2">
+                <input type="checkbox" name="quality_analysis" checked class="rounded">
+                <span class="text-sm">⭐ Quality Analysis</span>
+              </label>
+            </div>
+          </div>
+          <button class="w-full bg-sky-600 hover:bg-sky-700 text-white px-4 py-3 rounded font-medium">
+            🚀 Process Data & Generate Charts
+          </button>
+        </form>
+      </section>
+
+      <section id="result" class="hidden space-y-4">
+        <!-- Success Message -->
+        <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div class="flex items-center gap-2">
+            <span class="text-green-600">✓</span>
+            <h2 class="font-semibold text-green-800">Data Cleaned Successfully!</h2>
+          </div>
+          <div id="meta" class="text-sm text-green-700 mt-2"></div>
+        </div>
+
+        <!-- Quality Analysis -->
+        <div class="p-4 bg-white rounded-lg shadow">
+          <h3 class="font-semibold mb-3">Data Quality Analysis</h3>
+          <div id="qualityAnalysis" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Quality metrics will be populated here -->
+          </div>
+        </div>
+
+        <!-- Before/After Comparison -->
+        <div class="p-4 bg-white rounded-lg shadow">
+          <h3 class="font-semibold mb-3">Before vs After Cleaning</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-red-50 p-3 rounded">
+              <h4 class="font-medium text-red-800 mb-2">Before Cleaning</h4>
+              <div id="beforeStats" class="space-y-1 text-sm">
+                <!-- Before stats will be populated here -->
+              </div>
+            </div>
+            <div class="bg-green-50 p-3 rounded">
+              <h4 class="font-medium text-green-800 mb-2">After Cleaning</h4>
+              <div id="afterStats" class="space-y-1 text-sm">
+                <!-- After stats will be populated here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Improvement Summary -->
+        <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h3 class="font-semibold text-blue-800 mb-2">Improvements Made</h3>
+          <div id="improvements" class="space-y-1 text-sm text-blue-700">
+            <!-- Improvements will be populated here -->
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = '';
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const result = document.getElementById('result');
+      
+      // Validate file selection
+      const fileInput = e.target.querySelector('input[type="file"]');
+      if (!fileInput.files || fileInput.files.length === 0) {
+        result.innerHTML = '<div class="text-center py-8 text-red-600">❌ Please select a file to upload</div>';
+        return;
+      }
+      
+      result.innerHTML = '<div class="text-center py-8 text-blue-600">🔄 Processing your data...</div>';
+      result.classList.remove('hidden');
+      
+      try {
+        console.log('Uploading file:', fileInput.files[0].name);
+        
+        const response = await fetch(API_BASE + '/api/admin/clean-data', {
+          method: 'POST',
+          body: formData
+        });
+        
+        console.log('Upload response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const j = await response.json();
+        console.log('Upload result:', j);
+        
+        if (j.success) {
+          // Clear processing message and show results
+          result.innerHTML = `
+            <!-- Success Message with Download -->
+            <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div class="flex items-center gap-2">
+                <span class="text-green-600">✓</span>
+                <h2 class="font-semibold text-green-800">Data Cleaned Successfully!</h2>
+              </div>
+              <div id="meta" class="text-sm text-green-700 mt-2">Processed ${j.meta?.rows_in || 0} rows → ${j.meta?.rows_out || 0} rows. Quality improved: ${j.meta?.quality_improved ? 'Yes' : 'No'}</div>
+              <div class="mt-3 flex gap-2">
+                <button onclick="downloadCleanedData('${j.data?.cleaned_file || ''}')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">
+                  📥 Download Cleaned Dataset
+                </button>
+                <button onclick="sendToVisualizer('${j.data?.cleaned_file || ''}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">
+                  📊 Open in Visualizer
+                </button>
+              </div>
+            </div>
+
+            <!-- Quality Analysis -->
+            <div class="p-4 bg-white rounded-lg shadow">
+              <h3 class="font-semibold mb-3">Data Quality Analysis</h3>
+              <div id="qualityAnalysis" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Quality metrics will be populated here -->
+              </div>
+            </div>
+
+            <!-- Before/After Comparison -->
+            <div class="p-4 bg-white rounded-lg shadow">
+              <h3 class="font-semibold mb-3">Before vs After Cleaning</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-red-50 p-3 rounded">
+                  <h4 class="font-medium text-red-800 mb-2">Before Cleaning</h4>
+                  <div id="beforeStats" class="space-y-1 text-sm">
+                    <!-- Before stats will be populated here -->
+                  </div>
+                </div>
+                <div class="bg-green-50 p-3 rounded">
+                  <h4 class="font-medium text-green-800 mb-2">After Cleaning</h4>
+                  <div id="afterStats" class="space-y-1 text-sm">
+                    <!-- After stats will be populated here -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Improvement Summary -->
+            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h3 class="font-semibold text-blue-800 mb-2">Improvements Made</h3>
+              <div id="improvements" class="space-y-1 text-sm text-blue-700">
+                <!-- Improvements will be populated here -->
+              </div>
+            </div>
+          `;
+          result.classList.remove('hidden');
+          
+          // Get quality data - handle different response structures
+          const qualityBefore = j.data?.before?.quality || j.data?.quality_analysis_before || {};
+          const qualityAfter = j.data?.after?.quality || j.data?.quality_analysis_after || {};
+          const summaryBefore = j.data?.before?.summary || j.data?.summary_before || {};
+          const summaryAfter = j.data?.after?.summary || j.data?.summary_after || {};
+          
+          // Safely update quality analysis
+          const qualityElement = document.getElementById('qualityAnalysis');
+          if (qualityElement) {
+            qualityElement.innerHTML = `
+              <div class="bg-slate-50 p-3 rounded">
+                <div class="text-sm font-medium text-slate-700">Data Quality Score</div>
+                <div class="text-lg font-bold text-blue-600">${qualityBefore.quality_score || 'Good'}</div>
+                <div class="text-xs text-slate-500">Before cleaning</div>
+              </div>
+              <div class="bg-slate-50 p-3 rounded">
+                <div class="text-sm font-medium text-slate-700">Data Quality Score</div>
+                <div class="text-lg font-bold text-green-600">${qualityAfter.quality_score || 'Good'}</div>
+                <div class="text-xs text-slate-500">After cleaning</div>
+              </div>
+            `;
+          }
+          
+          // Safely update before stats
+          const beforeStatsElement = document.getElementById('beforeStats');
+          if (beforeStatsElement) {
+            beforeStatsElement.innerHTML = `
+              <div>📊 Rows: <strong>${summaryBefore.rows || j.meta?.rows_in || 0}</strong></div>
+              <div>📋 Columns: <strong>${summaryBefore.cols || summaryBefore.columns?.length || 0}</strong></div>
+              <div>❌ Missing Values: <strong>${qualityBefore.missing_values || 0}</strong></div>
+              <div>🔄 Duplicates: <strong>${qualityBefore.duplicate_rows || 0}</strong></div>
+              <div>📈 Missing %: <strong>${(qualityBefore.missing_percentage || 0).toFixed ? (qualityBefore.missing_percentage || 0).toFixed(1) : 0}%</strong></div>
+            `;
+          }
+        
+          // Safely update after stats
+          const afterStatsElement = document.getElementById('afterStats');
+          if (afterStatsElement) {
+            afterStatsElement.innerHTML = `
+              <div>📊 Rows: <strong>${summaryAfter.rows || j.meta?.rows_out || 0}</strong></div>
+              <div>📋 Columns: <strong>${summaryAfter.cols || summaryAfter.columns?.length || 0}</strong></div>
+              <div>✅ Missing Values: <strong>${qualityAfter.missing_values || 0}</strong></div>
+              <div>✨ Duplicates: <strong>${qualityAfter.duplicate_rows || 0}</strong></div>
+              <div>📉 Missing %: <strong>${(qualityAfter.missing_percentage || 0).toFixed ? (qualityAfter.missing_percentage || 0).toFixed(1) : 0}%</strong></div>
+            `;
+          }
+          
+          // Safely display improvements
+          const improvementsElement = document.getElementById('improvements');
+          if (improvementsElement) {
+            const improvements = j.data?.improvement || {};
+            const improvementsList = [];
+            
+            if (improvements.missing_reduction && improvements.missing_reduction > 0) {
+              improvementsList.push(`🧹 Reduced missing values by ${improvements.missing_reduction.toFixed ? improvements.missing_reduction.toFixed(1) : improvements.missing_reduction}%`);
+            }
+            if (improvements.duplicate_reduction && improvements.duplicate_reduction > 0) {
+              improvementsList.push(`🔄 Removed ${improvements.duplicate_reduction} duplicate rows`);
+            }
+            if (improvements.quality_score_before !== improvements.quality_score_after) {
+              improvementsList.push(`⭐ Quality improved from ${improvements.quality_score_before || 'Unknown'} to ${improvements.quality_score_after || 'Good'}`);
+            }
+            if (qualityAfter.numeric_stats && typeof qualityAfter.numeric_stats === 'object') {
+              const numericCount = Object.keys(qualityAfter.numeric_stats).length;
+              if (numericCount > 0) {
+                improvementsList.push(`📊 Analyzed ${numericCount} numeric columns with RMSE/MSE metrics`);
+              }
+            }
+            
+            if (improvementsList.length === 0) {
+              improvementsList.push('✅ Data was already in good condition');
+            }
+            
+            improvementsElement.innerHTML = improvementsList.map(item => `<div>${item}</div>`).join('');
+          }
+        
+      } else {
+        // Show error
+        result.innerHTML = `
+          <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div class="flex items-center gap-2">
+              <span class="text-red-600">❌</span>
+              <h2 class="font-semibold text-red-800">Processing Failed</h2>
+            </div>
+            <div class="text-sm text-red-700 mt-2">Error: ${j.meta?.error || 'Unknown error occurred'}</div>
+          </div>
+        `;
+        result.classList.remove('hidden');
+      }
+      
+      } catch (error) {
+        console.error('Upload error:', error);
+        result.innerHTML = `
+          <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div class="flex items-center gap-2">
+              <span class="text-red-600">❌</span>
+              <h2 class="font-semibold text-red-800">Upload Failed</h2>
+            </div>
+            <div class="text-sm text-red-700 mt-2">Error: ${error.message}</div>
+          </div>
+        `;
+        result.classList.remove('hidden');
+      }
+    });
+    
+    function getQualityColor(score) {
+      switch (score) {
+        case 'Excellent': return 'text-green-600';
+        case 'Good': return 'text-blue-600';
+        case 'Fair': return 'text-yellow-600';
+        case 'Poor': return 'text-red-600';
+        default: return 'text-gray-600';
+      }
+    }
+    
+    // Download cleaned dataset
+    async function downloadCleanedData(filePath) {
+      try {
+        console.log('Downloading file from path:', filePath);
+        
+        let response;
+        
+        if (filePath) {
+          // Extract filename from path
+          const filename = filePath.split('/').pop() || filePath.split('\\').pop();
+          console.log('Extracted filename:', filename);
+          
+          // Try to download the specific cleaned file
+          response = await fetch(`/api/admin/download-cleaned/${encodeURIComponent(filename)}`);
+          console.log('Specific file download response status:', response.status);
+        }
+        
+        // If specific file failed or no path provided, try latest file
+        if (!response || !response.ok) {
+          console.log('Trying to download latest cleaned file...');
+          response = await fetch('/api/admin/download-latest-cleaned');
+          console.log('Latest file download response status:', response.status);
+        }
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `cleaned_${new Date().toISOString().split('T')[0]}_dataset.csv`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          
+          // Show success message
+          alert('✅ Cleaned dataset downloaded successfully!');
+        } else {
+          const errorText = await response.text();
+          console.error('Download failed:', errorText);
+          alert('Failed to download cleaned dataset. Please try uploading and cleaning data first.');
+        }
+      } catch (error) {
+        console.error('Download error:', error);
+        alert('Error downloading file: ' + error.message);
+      }
+    }
+    
+    // Send to visualizer
+    async function sendToVisualizer(filePath) {
+      try {
+        if (!filePath) {
+          alert('No cleaned file available');
+          return;
+        }
+        
+        console.log('Sending to visualizer, file path:', filePath);
+        
+        // Extract filename from path
+        const filename = filePath.split('/').pop() || filePath.split('\\').pop();
+        console.log('Extracted filename for visualizer:', filename);
+        
+        // Store the cleaned file info for the visualizer
+        localStorage.setItem('cleaned_dataset_filename', filename);
+        localStorage.setItem('cleaned_dataset_path', filePath);
+        
+        // Show loading message
+        const originalText = event.target.textContent;
+        event.target.textContent = '🔄 Opening Visualizer...';
+        event.target.disabled = true;
+        
+        // Open visualizer in new tab
+        const visualizerWindow = window.open('/data_visualizer.html?cleaned=true', '_blank');
+        
+        // Reset button after a delay
+        setTimeout(() => {
+          event.target.textContent = originalText;
+          event.target.disabled = false;
+        }, 2000);
+        
+        if (!visualizerWindow) {
+          alert('Please allow popups to open the visualizer');
+        }
+        
+      } catch (error) {
+        console.error('Error opening visualizer:', error);
+        alert('Error opening visualizer: ' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login System Test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/api-utils.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="max-w-4xl mx-auto p-4">
+    <header class="py-6">
+      <h1 class="text-2xl font-bold text-sky-700">🔐 Login System Test & Debug</h1>
+      <p class="text-sm text-slate-600">Complete authentication flow testing</p>
+    </header>
+
+    <main class="space-y-6">
+      <!-- Test Results -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Admin Login Test -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-lg font-bold text-gray-900 mb-4">🔑 Admin Login Test</h2>
+          <button onclick="testAdminLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mb-3">
+            Test Admin Login
+          </button>
+          <div id="adminResult" class="text-sm"></div>
+        </div>
+
+        <!-- User Registration Test -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-lg font-bold text-gray-900 mb-4">👤 User Registration Test</h2>
+          <button onclick="testUserRegistration()" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded mb-3">
+            Test User Registration
+          </button>
+          <div id="regResult" class="text-sm"></div>
+        </div>
+
+        <!-- Token Validation Test -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-lg font-bold text-gray-900 mb-4">🎫 Token Validation Test</h2>
+          <button onclick="testTokenValidation()" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded mb-3">
+            Test Token Validation
+          </button>
+          <div id="tokenResult" class="text-sm"></div>
+        </div>
+
+        <!-- Redirect Test -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-lg font-bold text-gray-900 mb-4">🔄 Redirect Test</h2>
+          <button onclick="testRedirect()" class="w-full bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded mb-3">
+            Test Admin Redirect
+          </button>
+          <div id="redirectResult" class="text-sm"></div>
+        </div>
+      </div>
+
+      <!-- Current Status -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">📊 Current Authentication Status</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <div class="text-sm text-gray-600">Token Stored:</div>
+            <div id="tokenStatus" class="font-bold">Checking...</div>
+          </div>
+          <div>
+            <div class="text-sm text-gray-600">Backend Status:</div>
+            <div id="backendStatus" class="font-bold">Checking...</div>
+          </div>
+          <div>
+            <div class="text-sm text-gray-600">Auth Endpoints:</div>
+            <div id="authStatus" class="font-bold">Checking...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual Login Form -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">🧪 Manual Login Test</h2>
+        <form id="testLoginForm" class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium mb-1">Email</label>
+            <input name="email" value="admin@example.com" class="w-full border rounded p-2" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Password</label>
+            <input name="password" type="password" value="password" class="w-full border rounded p-2" />
+          </div>
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+            Manual Login Test
+          </button>
+        </form>
+        <div id="manualResult" class="text-sm mt-3"></div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="bg-gray-100 rounded-lg p-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">⚡ Quick Actions</h2>
+        <div class="flex flex-wrap gap-3">
+          <button onclick="clearToken()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">
+            Clear Token
+          </button>
+          <button onclick="location.href='/login.html'" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+            Go to Login Page
+          </button>
+          <button onclick="location.href='/admin_dashboard.html'" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
+            Try Admin Dashboard
+          </button>
+          <button onclick="location.href='/'" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm">
+            Back to Homepage
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const { safeApiCall, API_BASE, TOKEN_KEY } = window.apiUtils;
+
+    // Test admin login
+    async function testAdminLogin() {
+      const result = document.getElementById('adminResult');
+      result.innerHTML = '<div class="text-blue-600">🔄 Testing admin login...</div>';
+      
+      try {
+        const response = await fetch(API_BASE + '/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'admin@example.com',
+            password: 'password'
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.data && data.data.token) {
+          result.innerHTML = `
+            <div class="text-green-600 font-bold">✅ SUCCESS</div>
+            <div class="text-xs mt-1">Email: ${data.data.user.email}</div>
+            <div class="text-xs">Role: ${data.data.user.role}</div>
+            <div class="text-xs">Token: ${data.data.token.substring(0, 20)}...</div>
+          `;
+          localStorage.setItem(TOKEN_KEY, data.data.token);
+          updateStatus();
+        } else {
+          throw new Error(data.meta?.error || 'Login failed');
+        }
+      } catch (error) {
+        result.innerHTML = `
+          <div class="text-red-600 font-bold">❌ FAILED</div>
+          <div class="text-xs mt-1">${error.message}</div>
+        `;
+      }
+    }
+
+    // Test user registration
+    async function testUserRegistration() {
+      const result = document.getElementById('regResult');
+      result.innerHTML = '<div class="text-blue-600">🔄 Testing user registration...</div>';
+      
+      const testEmail = `testuser${Date.now()}@example.com`;
+      
+      try {
+        const response = await fetch(API_BASE + '/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: testEmail,
+            username: 'Test User',
+            password: 'testpass123'
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          result.innerHTML = `
+            <div class="text-green-600 font-bold">✅ SUCCESS</div>
+            <div class="text-xs mt-1">Created: ${testEmail}</div>
+            <div class="text-xs">Registration working properly</div>
+          `;
+        } else {
+          throw new Error(data.meta?.error || 'Registration failed');
+        }
+      } catch (error) {
+        result.innerHTML = `
+          <div class="text-red-600 font-bold">❌ FAILED</div>
+          <div class="text-xs mt-1">${error.message}</div>
+        `;
+      }
+    }
+
+    // Test token validation
+    async function testTokenValidation() {
+      const result = document.getElementById('tokenResult');
+      result.innerHTML = '<div class="text-blue-600">🔄 Testing token validation...</div>';
+      
+      const token = localStorage.getItem(TOKEN_KEY);
+      
+      if (!token) {
+        result.innerHTML = `
+          <div class="text-yellow-600 font-bold">⚠️ NO TOKEN</div>
+          <div class="text-xs mt-1">Please login first</div>
+        `;
+        return;
+      }
+      
+      try {
+        const response = await fetch(API_BASE + '/api/auth/me', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          result.innerHTML = `
+            <div class="text-green-600 font-bold">✅ VALID TOKEN</div>
+            <div class="text-xs mt-1">User: ${data.data.email}</div>
+            <div class="text-xs">Role: ${data.data.role}</div>
+          `;
+        } else {
+          throw new Error(data.meta?.error || 'Token validation failed');
+        }
+      } catch (error) {
+        result.innerHTML = `
+          <div class="text-red-600 font-bold">❌ INVALID TOKEN</div>
+          <div class="text-xs mt-1">${error.message}</div>
+        `;
+      }
+    }
+
+    // Test redirect functionality
+    async function testRedirect() {
+      const result = document.getElementById('redirectResult');
+      result.innerHTML = '<div class="text-blue-600">🔄 Testing redirect...</div>';
+      
+      // First ensure we're logged in
+      await testAdminLogin();
+      
+      setTimeout(() => {
+        result.innerHTML = `
+          <div class="text-green-600 font-bold">✅ REDIRECT TEST</div>
+          <div class="text-xs mt-1">Redirecting to admin dashboard...</div>
+        `;
+        
+        // Test the redirect
+        setTimeout(() => {
+          window.location.replace('/admin_dashboard.html');
+        }, 1000);
+      }, 500);
+    }
+
+    // Clear token
+    function clearToken() {
+      localStorage.removeItem(TOKEN_KEY);
+      updateStatus();
+      document.getElementById('tokenResult').innerHTML = '<div class="text-gray-600">Token cleared</div>';
+    }
+
+    // Update status display
+    function updateStatus() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      document.getElementById('tokenStatus').textContent = token ? 'Yes' : 'No';
+      document.getElementById('tokenStatus').className = token ? 'font-bold text-green-600' : 'font-bold text-red-600';
+    }
+
+    // Manual login form
+    document.getElementById('testLoginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const result = document.getElementById('manualResult');
+      result.innerHTML = '<div class="text-blue-600">🔄 Testing manual login...</div>';
+      
+      const fd = new FormData(e.target);
+      
+      try {
+        const response = await fetch(API_BASE + '/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: fd.get('email'),
+            password: fd.get('password')
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.data && data.data.token) {
+          localStorage.setItem(TOKEN_KEY, data.data.token);
+          result.innerHTML = `
+            <div class="text-green-600 font-bold">✅ Manual login successful!</div>
+            <div class="text-xs mt-1">Role: ${data.data.user.role}</div>
+            <div class="text-xs">Ready to redirect...</div>
+          `;
+          updateStatus();
+          
+          // Auto redirect after 2 seconds
+          setTimeout(() => {
+            if (data.data.user.role === 'admin') {
+              window.location.replace('/admin_dashboard.html');
+            } else {
+              window.location.replace('/shop.html');
+            }
+          }, 2000);
+          
+        } else {
+          throw new Error(data.meta?.error || 'Login failed');
+        }
+      } catch (error) {
+        result.innerHTML = `
+          <div class="text-red-600 font-bold">❌ Manual login failed</div>
+          <div class="text-xs mt-1">${error.message}</div>
+        `;
+      }
+    });
+
+    // Check backend status
+    async function checkBackend() {
+      try {
+        const response = await fetch(API_BASE + '/api/health');
+        const data = await response.json();
+        
+        if (data.success) {
+          document.getElementById('backendStatus').textContent = 'Online';
+          document.getElementById('backendStatus').className = 'font-bold text-green-600';
+        } else {
+          throw new Error('Backend unhealthy');
+        }
+      } catch (error) {
+        document.getElementById('backendStatus').textContent = 'Offline';
+        document.getElementById('backendStatus').className = 'font-bold text-red-600';
+      }
+    }
+
+    // Check auth endpoints
+    async function checkAuthEndpoints() {
+      try {
+        // Test if auth endpoints exist
+        const response = await fetch(API_BASE + '/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'test', password: 'test' })
+        });
+        
+        // Even if login fails, if we get a response, endpoints exist
+        document.getElementById('authStatus').textContent = 'Available';
+        document.getElementById('authStatus').className = 'font-bold text-green-600';
+        
+      } catch (error) {
+        document.getElementById('authStatus').textContent = 'Unavailable';
+        document.getElementById('authStatus').className = 'font-bold text-red-600';
+      }
+    }
+
+    // Initialize page
+    window.addEventListener('load', () => {
+      updateStatus();
+      checkBackend();
+      checkAuthEndpoints();
+    });
+  </script>
+</body>
+</html>

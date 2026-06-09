@@ -1,0 +1,5 @@
+# Cloud/GPU training config (example)
+lookback: 28
+epochs: 20
+batch: 32
+mode: cloud

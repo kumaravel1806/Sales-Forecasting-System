@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Model Comparison - MAE/RMSE/MAPE/R2</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="max-w-3xl mx-auto p-4">
+    <header class="py-6 flex items-center justify-between">
+      <div>
+        <a href="/" class="text-sky-600 text-sm">← Home</a>
+        <h1 class="text-2xl font-bold text-sky-700 mt-2">Model Comparison</h1>
+        <p class="text-sm text-slate-600">Holdout: last horizon points • Metrics: MAE, RMSE, MAPE, R2</p>
+      </div>
+    </header>
+
+    <main class="space-y-4">
+      <section class="p-4 bg-white rounded-lg shadow">
+        <form id="cmpForm" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium mb-1">CSV / Excel with columns: date, qty, sku(optional)</label>
+            <input type="file" name="file" accept=".csv,.xlsx,.xls" class="w-full border rounded p-2" required />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Horizon (days)</label>
+            <input type="number" name="horizon" class="w-full border rounded p-2" value="7" min="1" />
+          </div>
+          <div class="md:col-span-3">
+            <button class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded">Run Comparison</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="summary" class="hidden p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-2">Overall Averages</h2>
+        <div id="overall" class="text-sm"></div>
+      </section>
+
+      <section id="tableWrap" class="hidden p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-2">Per-SKU Metrics</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead>
+              <tr class="text-left border-b">
+                <th class="py-2 pr-4">SKU</th>
+                <th class="py-2 pr-4">Horizon</th>
+                <th class="py-2 pr-4">LR MAE</th>
+                <th class="py-2 pr-4">LR RMSE</th>
+                <th class="py-2 pr-4">LR MAPE</th>
+                <th class="py-2 pr-4">LR R2</th>
+                <th class="py-2 pr-4">XGB MAE</th>
+                <th class="py-2 pr-4">XGB RMSE</th>
+                <th class="py-2 pr-4">XGB MAPE</th>
+                <th class="py-2 pr-4">XGB R2</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = location.origin.startsWith('http://localhost:5173') ? 'http://localhost:8000' : '';
+    document.getElementById('cmpForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const q = new URLSearchParams();
+      const horizon = fd.get('horizon') || '7';
+      q.set('horizon', horizon);
+      const res = await fetch(API_BASE + '/api/ml/compare?' + q.toString(), {method: 'POST', body: fd});
+      const j = await res.json().catch(() => ({ success:false, meta:{error:'bad_json'} }));
+      document.getElementById('summary').classList.remove('hidden');
+      document.getElementById('tableWrap').classList.remove('hidden');
+
+      const overall = j.data?.overall || {};
+      const lr = overall.lr || {}; const xgb = overall.xgb || {};
+      document.getElementById('overall').textContent = `LR MAE ${lr.mae ?? 'NA'}, RMSE ${lr.rmse ?? 'NA'}, MAPE ${lr.mape ?? 'NA'}, R2 ${lr.r2 ?? 'NA'} | XGB MAE ${xgb.mae ?? 'NA'}, RMSE ${xgb.rmse ?? 'NA'}, MAPE ${xgb.mape ?? 'NA'}, R2 ${xgb.r2 ?? 'NA'}`;
+
+      const rows = document.getElementById('rows');
+      rows.innerHTML = '';
+      (j.data?.per_sku || []).forEach(r => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b';
+        const lr = r.metrics?.lr || {}; const xgb = r.metrics?.xgb || {};
+        // pick best by MAE, tie-breaker RMSE
+        let best = 'lr';
+        if (xgb && (xgb.mae ?? Infinity) < (lr.mae ?? Infinity)) best = 'xgb';
+        else if ((xgb?.mae ?? Infinity) === (lr.mae ?? Infinity) && (xgb?.rmse ?? Infinity) < (lr.rmse ?? Infinity)) best = 'xgb';
+        tr.innerHTML = `
+          <td class="py-2 pr-4">${r.sku}</td>
+          <td class="py-2 pr-4">${r.horizon}</td>
+          <td class="py-2 pr-4 ${best==='lr' ? 'text-emerald-700 font-semibold' : ''}">${lr.mae ?? 'NA'}</td>
+          <td class="py-2 pr-4 ${best==='lr' ? 'text-emerald-700 font-semibold' : ''}">${lr.rmse ?? 'NA'}</td>
+          <td class="py-2 pr-4 ${best==='lr' ? 'text-emerald-700 font-semibold' : ''}">${lr.mape ?? 'NA'}</td>
+          <td class="py-2 pr-4 ${best==='lr' ? 'text-emerald-700 font-semibold' : ''}">${lr.r2 ?? 'NA'}</td>
+          <td class="py-2 pr-4 ${best==='xgb' ? 'text-emerald-700 font-semibold' : ''}">${xgb?.mae ?? 'NA'}</td>
+          <td class="py-2 pr-4 ${best==='xgb' ? 'text-emerald-700 font-semibold' : ''}">${xgb?.rmse ?? 'NA'}</td>
+          <td class="py-2 pr-4 ${best==='xgb' ? 'text-emerald-700 font-semibold' : ''}">${xgb?.mape ?? 'NA'}</td>
+          <td class="py-2 pr-4 ${best==='xgb' ? 'text-emerald-700 font-semibold' : ''}">${xgb?.r2 ?? 'NA'}</td>
+        `;
+        rows.appendChild(tr);
+      });
+    });
+  </script>
+</body>
+</html>

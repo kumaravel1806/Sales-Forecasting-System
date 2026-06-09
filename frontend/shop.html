@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shop - RetailForecaster Pro</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    @keyframes bounce {
+      0%, 20%, 53%, 80%, 100% {
+        transform: translate3d(0,0,0);
+      }
+      40%, 43% {
+        transform: translate3d(0, -30px, 0);
+      }
+      70% {
+        transform: translate3d(0, -15px, 0);
+      }
+      90% {
+        transform: translate3d(0, -4px, 0);
+      }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    .animate-fadeInUp {
+      animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .animate-slideIn {
+      animation: slideIn 0.6s ease-out;
+    }
+    
+    .animate-bounce-slow {
+      animation: bounce 2s infinite;
+    }
+    
+    .animate-pulse-slow {
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .product-card {
+      transition: all 0.3s ease;
+      transform-style: preserve-3d;
+    }
+    
+    .product-card:hover {
+      transform: translateY(-10px) rotateY(5deg);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+    }
+    
+    .cart-item {
+      transition: all 0.3s ease;
+    }
+    
+    .cart-item:hover {
+      background: #f8fafc;
+      transform: translateX(5px);
+    }
+    
+    .toast-notification {
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    .loading-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    .nav-sticky {
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+      transition: all 0.3s ease;
+    }
+    
+    .category-badge {
+      transition: all 0.2s ease;
+    }
+    
+    .category-badge:hover {
+      transform: scale(1.05);
+    }
+    
+    .star-rating {
+      transition: all 0.2s ease;
+    }
+    
+    .star-rating:hover {
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <!-- Modern Navigation -->
+  <nav class="fixed top-0 w-full z-50 nav-sticky border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center space-x-4">
+          <button onclick="history.back()" class="text-gray-600 hover:text-blue-600 transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i>Back
+          </button>
+          <a href="/" class="text-gray-600 hover:text-blue-600 transition-colors">
+            <i class="fas fa-home mr-2"></i>Home
+          </a>
+          <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+            <i class="fas fa-shopping-bag text-white text-sm"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Shop</h1>
+            <p class="text-xs text-gray-600">Browse & Purchase</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button onclick="toggleCart()" class="relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-all flex items-center">
+            <i class="fas fa-shopping-cart mr-2"></i>
+            Cart
+            <span id="cartBadge" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">0</span>
+          </button>
+          <button onclick="localStorage.removeItem('retail_jwt'); location.href='/login.html'" class="text-red-600 hover:text-red-800 transition-colors">
+            <i class="fas fa-sign-out-alt mr-1"></i>Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="pt-24 pb-12 bg-gradient-to-r from-blue-600 to-purple-600">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center text-white">
+        <div class="inline-flex items-center bg-white bg-opacity-20 px-4 py-2 rounded-full text-sm font-medium mb-4">
+          <i class="fas fa-sparkles mr-2"></i>
+          Premium Shopping Experience
+        </div>
+        <h2 class="text-4xl md:text-5xl font-bold mb-4 animate-fadeInUp">
+          Welcome to Our Store
+        </h2>
+        <p class="text-xl text-blue-100 mb-8 animate-fadeInUp" style="animation-delay: 0.2s;">
+          Discover amazing products at great prices across our 18+ stores
+        </p>
+        <div class="flex justify-center space-x-4 animate-fadeInUp" style="animation-delay: 0.4s;">
+          <button onclick="scrollToProducts()" class="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-xl font-medium transition-all">
+            <i class="fas fa-shopping-bag mr-2"></i>Browse Products
+          </button>
+          <button onclick="toggleCart()" class="bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-xl font-medium transition-all">
+            <i class="fas fa-shopping-cart mr-2"></i>View Cart
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Filters and Search -->
+    <section class="bg-white rounded-xl shadow-lg p-6 mb-8 animate-fadeInUp">
+      <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div class="flex-1">
+          <div class="relative">
+            <input type="text" id="searchInput" placeholder="Search products..." 
+                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <select id="categoryFilter" class="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500">
+            <option value="">All Categories</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Clothing">Clothing</option>
+            <option value="Food">Food</option>
+            <option value="Medicine">Medicine</option>
+            <option value="Cosmetics">Cosmetics</option>
+          </select>
+          <select id="sortBy" class="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500">
+            <option value="name">Sort by Name</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+          </select>
+          <button onclick="loadProducts()" class="btn-primary text-white px-6 py-3 rounded-xl">
+            <i class="fas fa-sync-alt mr-2"></i>Refresh
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Products Grid -->
+    <section id="productsSection" class="mb-8">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-2xl font-bold text-gray-900">Our Products</h3>
+        <div class="flex items-center space-x-4">
+          <div class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+            <i class="fas fa-box mr-1"></i>
+            <span id="productCount">0</span> Products
+          </div>
+        </div>
+      </div>
+      
+      <div id="products" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Loading State -->
+        <div class="col-span-full text-center py-12">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+            <i class="fas fa-spinner fa-spin text-blue-600 text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">Loading Products...</h3>
+          <p class="text-gray-600">Please wait while we fetch the latest products</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Shopping Cart Sidebar -->
+    <div id="cartSidebar" class="fixed right-0 top-0 h-full w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-50">
+      <div class="flex flex-col h-full">
+        <div class="flex items-center justify-between p-6 border-b">
+          <h3 class="text-xl font-bold text-gray-900">
+            <i class="fas fa-shopping-cart mr-2"></i>Shopping Cart
+          </h3>
+          <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        
+        <div id="cartItems" class="flex-1 overflow-y-auto p-6">
+          <div class="text-center py-8 text-gray-500">
+            <i class="fas fa-shopping-cart text-4xl mb-2"></i>
+            <p>Your cart is empty</p>
+          </div>
+        </div>
+        
+        <div class="border-t p-6">
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-xl font-bold">Total:</span>
+            <span class="text-2xl font-bold text-green-600">₹<span id="cartTotal">0.00</span></span>
+          </div>
+          <div class="space-y-2">
+            <button onclick="clearCart()" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl transition-colors">
+              <i class="fas fa-trash mr-2"></i>Clear Cart
+            </button>
+            <button onclick="checkout()" class="w-full btn-primary text-white px-4 py-3 rounded-xl">
+              <i class="fas fa-credit-card mr-2"></i>Proceed to Checkout
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkout Form -->
+    <section id="checkoutSection" class="bg-white rounded-xl shadow-lg p-6 mb-8 hidden">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-2xl font-bold text-gray-900">
+          <i class="fas fa-credit-card mr-2"></i>Checkout
+        </h3>
+        <button onclick="closeCheckout()" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      
+      <form id="checkoutForm" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              <i class="fas fa-user mr-1"></i>Full Name
+            </label>
+            <input name="name" type="text" placeholder="Enter your full name" 
+                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              <i class="fas fa-phone mr-1"></i>Phone Number
+            </label>
+            <input name="phone" type="tel" placeholder="Enter your phone number" 
+                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            <i class="fas fa-map-marker-alt mr-1"></i>Delivery Address
+          </label>
+          <textarea name="address" placeholder="Enter your delivery address" 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 h-24" required></textarea>
+        </div>
+        
+        <div class="bg-gray-50 rounded-xl p-4">
+          <h4 class="font-semibold text-gray-900 mb-2">Order Summary</h4>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span>Items:</span>
+              <span id="orderItems">0</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Total:</span>
+              <span class="font-bold text-green-600">₹<span id="orderTotal">0.00</span></span>
+            </div>
+          </div>
+        </div>
+        
+        <button type="submit" class="w-full btn-primary text-white px-6 py-4 rounded-xl font-medium">
+          <i class="fas fa-check-circle mr-2"></i>Place Order
+        </button>
+      </form>
+      
+      <div id="orderMsg" class="mt-4"></div>
+    </section>
+
+    <!-- Feedback Form -->
+    <section class="bg-white rounded-xl shadow-lg p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-2xl font-bold text-gray-900">
+          <i class="fas fa-comments mr-2"></i>Share Your Feedback
+        </h3>
+      </div>
+      
+      <form id="feedbackForm" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              <i class="fas fa-star mr-1"></i>Rating
+            </label>
+            <select name="rating" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500" required>
+              <option value="">Select rating</option>
+              <option value="1">⭐ Poor</option>
+              <option value="2">⭐⭐ Fair</option>
+              <option value="3">⭐⭐⭐ Good</option>
+              <option value="4">⭐⭐⭐⭐ Very Good</option>
+              <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              <i class="fas fa-tag mr-1"></i>Category
+            </label>
+            <select name="category" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500" required>
+              <option value="">Select category</option>
+              <option value="product_quality">Product Quality</option>
+              <option value="service">Customer Service</option>
+              <option value="delivery">Delivery Experience</option>
+              <option value="website">Website Experience</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            <i class="fas fa-message mr-1"></i>Your Feedback
+          </label>
+          <textarea name="message" placeholder="Share your thoughts with us..." 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 h-24" required></textarea>
+        </div>
+        
+        <button type="submit" class="btn-primary text-white px-6 py-3 rounded-xl">
+          <i class="fas fa-paper-plane mr-2"></i>Submit Feedback
+        </button>
+      </form>
+      
+      <div id="feedbackMsg" class="mt-4"></div>
+    </section>
+  </main>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed top-20 right-4 z-50 space-y-2"></div>
+
+  <script>
+    console.log('Modern shop page loaded');
+    const API_BASE = window.location.origin.startsWith('http://localhost:5173')
+      ? 'http://localhost:8000'
+      : '';
+    const TOKEN_KEY = 'retail_jwt';
+    
+    let cart = JSON.parse(localStorage.getItem('shopping_cart') || '[]');
+    let products = [];
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', () => {
+      loadProducts();
+      updateCartDisplay();
+      setupEventListeners();
+    });
+
+    // Setup event listeners
+    function setupEventListeners() {
+      document.getElementById('searchInput').addEventListener('input', filterProducts);
+      document.getElementById('categoryFilter').addEventListener('change', filterProducts);
+      document.getElementById('sortBy').addEventListener('change', sortProducts);
+      
+      document.getElementById('checkoutForm').addEventListener('submit', handleCheckout);
+      document.getElementById('feedbackForm').addEventListener('submit', handleFeedback);
+    }
+
+    // Scroll to products
+    function scrollToProducts() {
+      document.getElementById('productsSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Toggle cart sidebar
+    function toggleCart() {
+      const sidebar = document.getElementById('cartSidebar');
+      sidebar.classList.toggle('translate-x-full');
+      updateCartDisplay();
+    }
+
+    // Load products from backend
+    async function loadProducts() {
+      try {
+        console.log('Loading products...');
+        const productsContainer = document.getElementById('products');
+        
+        // Show loading state
+        productsContainer.innerHTML = `
+          <div class="col-span-full text-center py-12">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+              <i class="fas fa-spinner fa-spin text-blue-600 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Loading Products...</h3>
+            <p class="text-gray-600">Please wait while we fetch the latest products</p>
+          </div>
+        `;
+        
+        const response = await fetch(API_BASE + '/api/products/');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('Products API result:', result);
+        
+        if (result.success && result.data && result.data.length > 0) {
+          products = result.data;
+          displayProducts(products);
+          document.getElementById('productCount').textContent = products.length;
+        } else {
+          showNoProducts();
+        }
+      } catch (error) {
+        console.error('Error loading products:', error);
+        showErrorState(error.message);
+      }
+    }
+
+    // Display products
+    function displayProducts(productsToShow) {
+      const container = document.getElementById('products');
+      
+      container.innerHTML = productsToShow.map((product, index) => `
+        <div class="product-card bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden" style="animation-delay: ${index * 0.1}s">
+          <div class="aspect-square bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+            <span class="text-6xl">${getCategoryIcon(product.category)}</span>
+          </div>
+          <div class="p-6">
+            <div class="mb-2">
+              <span class="category-badge inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                ${product.category}
+              </span>
+            </div>
+            <h4 class="font-bold text-gray-900 text-lg mb-2">${product.name}</h4>
+            <p class="text-sm text-gray-600 mb-4">SKU: ${product.sku || 'N/A'}</p>
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-2xl font-bold text-green-600">₹${parseFloat(product.price).toFixed(2)}</span>
+              <div class="flex items-center text-sm text-gray-500">
+                <i class="fas fa-box mr-1"></i>
+                In Stock
+              </div>
+            </div>
+            <button onclick="addToCart(${product.id}, '${product.name.replace(/'/g, "\\'")}', ${product.price})" 
+                    class="w-full btn-primary text-white px-4 py-3 rounded-xl font-medium">
+              <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Show no products state
+    function showNoProducts() {
+      document.getElementById('products').innerHTML = `
+        <div class="col-span-full text-center py-12">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+            <i class="fas fa-box text-gray-400 text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">No Products Available</h3>
+          <p class="text-gray-600 mb-4">Products will appear here once they are added by the admin</p>
+          <button onclick="loadProducts()" class="btn-primary text-white px-6 py-3 rounded-xl">
+            <i class="fas fa-sync-alt mr-2"></i>Refresh Products
+          </button>
+        </div>
+      `;
+      document.getElementById('productCount').textContent = '0';
+    }
+
+    // Show error state
+    function showErrorState(message) {
+      document.getElementById('products').innerHTML = `
+        <div class="col-span-full text-center py-12">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+            <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-red-600 mb-2">Failed to Load Products</h3>
+          <p class="text-gray-600 mb-4">Error: ${message}</p>
+          <button onclick="loadProducts()" class="btn-primary text-white px-6 py-3 rounded-xl">
+            <i class="fas fa-sync-alt mr-2"></i>Try Again
+          </button>
+        </div>
+      `;
+      document.getElementById('productCount').textContent = '0';
+    }
+
+    // Filter products
+    function filterProducts() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const category = document.getElementById('categoryFilter').value;
+      
+      let filtered = products.filter(product => {
+        const matchesSearch = product.name.toLowerCase().includes(searchTerm) || 
+                             (product.sku && product.sku.toLowerCase().includes(searchTerm));
+        const matchesCategory = !category || product.category === category;
+        return matchesSearch && matchesCategory;
+      });
+      
+      displayProducts(filtered);
+      document.getElementById('productCount').textContent = filtered.length;
+    }
+
+    // Sort products
+    function sortProducts() {
+      const sortBy = document.getElementById('sortBy').value;
+      let sorted = [...products];
+      
+      switch(sortBy) {
+        case 'name':
+          sorted.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case 'price-low':
+          sorted.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+          break;
+        case 'price-high':
+          sorted.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+          break;
+      }
+      
+      displayProducts(sorted);
+    }
+
+    // Add to cart
+    function addToCart(productId, productName, productPrice) {
+      const existingItem = cart.find(item => item.id === productId);
+      
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        cart.push({
+          id: productId,
+          name: productName,
+          price: productPrice,
+          quantity: 1
+        });
+      }
+      
+      localStorage.setItem('shopping_cart', JSON.stringify(cart));
+      updateCartDisplay();
+      
+      // Track activity
+      trackBuyingActivity({
+        action: 'add_to_cart',
+        product_id: productId,
+        product_name: productName,
+        price: productPrice,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Show toast notification
+      showToast(`✅ ${productName} added to cart!`, 'success');
+    }
+
+    // Update cart display
+    function updateCartDisplay() {
+      const cartBadge = document.getElementById('cartBadge');
+      const cartItems = document.getElementById('cartItems');
+      const cartTotal = document.getElementById('cartTotal');
+      
+      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+      cartBadge.textContent = totalItems;
+      
+      if (cart.length === 0) {
+        cartItems.innerHTML = `
+          <div class="text-center py-8 text-gray-500">
+            <i class="fas fa-shopping-cart text-4xl mb-2"></i>
+            <p>Your cart is empty</p>
+          </div>
+        `;
+      } else {
+        cartItems.innerHTML = cart.map(item => `
+          <div class="cart-item bg-gray-50 rounded-lg p-4 mb-3">
+            <div class="flex justify-between items-start mb-2">
+              <h5 class="font-semibold text-gray-900">${item.name}</h5>
+              <button onclick="removeFromCart(${item.id})" class="text-red-500 hover:text-red-700">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">₹${item.price} x ${item.quantity}</span>
+              <div class="flex items-center space-x-2">
+                <button onclick="updateQuantity(${item.id}, ${item.quantity - 1})" 
+                        class="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center">
+                  <i class="fas fa-minus text-xs"></i>
+                </button>
+                <span class="font-semibold w-8 text-center">${item.quantity}</span>
+                <button onclick="updateQuantity(${item.id}, ${item.quantity + 1})" 
+                        class="w-8 h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center">
+                  <i class="fas fa-plus text-xs"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+      
+      const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      cartTotal.textContent = total.toFixed(2);
+    }
+
+    // Update quantity
+    function updateQuantity(productId, newQuantity) {
+      if (newQuantity <= 0) {
+        removeFromCart(productId);
+        return;
+      }
+      
+      const item = cart.find(item => item.id === productId);
+      if (item) {
+        item.quantity = newQuantity;
+        localStorage.setItem('shopping_cart', JSON.stringify(cart));
+        updateCartDisplay();
+      }
+    }
+
+    // Remove from cart
+    function removeFromCart(productId) {
+      cart = cart.filter(item => item.id !== productId);
+      localStorage.setItem('shopping_cart', JSON.stringify(cart));
+      updateCartDisplay();
+      showToast('Item removed from cart', 'info');
+    }
+
+    // Clear cart
+    function clearCart() {
+      cart = [];
+      localStorage.setItem('shopping_cart', JSON.stringify(cart));
+      updateCartDisplay();
+      showToast('Cart cleared', 'info');
+    }
+
+    // Checkout
+    function checkout() {
+      toggleCart();
+      document.getElementById('checkoutSection').classList.remove('hidden');
+      updateOrderSummary();
+      document.getElementById('checkoutSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Close checkout
+    function closeCheckout() {
+      document.getElementById('checkoutSection').classList.add('hidden');
+    }
+
+    // Update order summary
+    function updateOrderSummary() {
+      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+      const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      
+      document.getElementById('orderItems').textContent = totalItems;
+      document.getElementById('orderTotal').textContent = total.toFixed(2);
+    }
+
+    // Handle checkout
+    async function handleCheckout(e) {
+      e.preventDefault();
+      
+      if (cart.length === 0) {
+        showToast('Your cart is empty', 'error');
+        return;
+      }
+      
+      const formData = new FormData(e.target);
+      const orderData = {
+        customer: {
+          name: formData.get('name'),
+          phone: formData.get('phone'),
+          address: formData.get('address')
+        },
+        items: cart.map(item => ({
+          product_id: item.id,
+          quantity: item.quantity
+        }))
+      };
+      
+      // Track checkout activity
+      trackBuyingActivity({
+        action: 'checkout_attempt',
+        customer_name: formData.get('name'),
+        total_items: cart.length,
+        total_value: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+        timestamp: new Date().toISOString()
+      });
+      
+      try {
+        const response = await fetch(API_BASE + '/api/orders/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // Track successful purchase
+          trackBuyingActivity({
+            action: 'purchase_completed',
+            order_id: result.data.order_id,
+            total_amount: result.data.total,
+            items_purchased: cart.length,
+            timestamp: new Date().toISOString()
+          });
+          
+          showToast(`🎉 Order #${result.data.order_id} placed successfully!`, 'success');
+          cart = [];
+          localStorage.setItem('shopping_cart', JSON.stringify(cart));
+          updateCartDisplay();
+          closeCheckout();
+          e.target.reset();
+        } else {
+          showToast(`Error: ${result.meta?.error || 'Failed to place order'}`, 'error');
+        }
+      } catch (error) {
+        console.error('Checkout error:', error);
+        showToast('Network error. Please try again.', 'error');
+      }
+    }
+
+    // Handle feedback
+    let isSubmittingFeedback = false;
+    async function handleFeedback(e) {
+      e.preventDefault();
+      
+      // Prevent multiple rapid submissions
+      if (isSubmittingFeedback) {
+        console.log('Feedback submission already in progress, ignoring duplicate request');
+        return;
+      }
+      
+      isSubmittingFeedback = true;
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalBtnText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting...';
+      
+      try {
+        const formData = new FormData(e.target);
+        const feedbackData = {
+          rating: parseInt(formData.get('rating')),
+          category: formData.get('category'),
+          message: formData.get('message'),
+          store_id: 1
+        };
+        
+        console.log('Submitting feedback:', feedbackData);
+        
+        const token = localStorage.getItem(TOKEN_KEY);
+        const response = await fetch(API_BASE + '/api/feedback/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? 'Bearer ' + token : ''
+          },
+          body: JSON.stringify(feedbackData)
+        });
+        
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Response error:', errorText);
+          throw new Error(`Server error: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Feedback result:', result);
+        
+        if (result.success) {
+          showToast('✅ Thank you for your feedback! We appreciate your input.', 'success');
+          e.target.reset();
+        } else {
+          throw new Error(result.meta?.error || 'Failed to submit feedback');
+        }
+      } catch (error) {
+        console.error('Feedback error:', error);
+        showToast(`❌ ${error.message || 'Network error. Please try again.'}`, 'error');
+      } finally {
+        // Re-enable submission after delay
+        setTimeout(() => {
+          isSubmittingFeedback = false;
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnText;
+        }, 2000);
+      }
+    }
+
+    // Track buying activity
+    async function trackBuyingActivity(activity) {
+      try {
+        const activities = JSON.parse(localStorage.getItem('buying_activities') || '[]');
+        activities.unshift(activity);
+        
+        if (activities.length > 50) {
+          activities.splice(50);
+        }
+        
+        localStorage.setItem('buying_activities', JSON.stringify(activities));
+        
+        await fetch('/api/analytics/track-activity', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem(TOKEN_KEY)
+          },
+          body: JSON.stringify(activity)
+        }).catch(err => console.log('Activity tracking failed:', err));
+        
+      } catch (error) {
+        console.error('Error tracking activity:', error);
+      }
+    }
+
+    // Show toast notification
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const bgColor = type === 'success' ? 'bg-green-600' : 
+                      type === 'error' ? 'bg-red-600' : 'bg-blue-600';
+      
+      toast.className = `toast-notification ${bgColor} text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3`;
+      toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+      `;
+      
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => container.removeChild(toast), 300);
+      }, 3000);
+    }
+
+    // Get category icon
+    function getCategoryIcon(category) {
+      const icons = {
+        'Electronics': '📱',
+        'Clothing': '👕',
+        'Food': '🍎',
+        'Medicine': '💊',
+        'Cosmetics': '💄',
+        'Books': '📚',
+        'Sports': '⚽',
+        'Home': '🏠',
+        'Appliances': '🔌',
+        'General': '📦'
+      };
+      return icons[category] || '📦';
+    }
+  </script>
+</body>
+</html>

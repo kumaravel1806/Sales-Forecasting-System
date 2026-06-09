@@ -1,0 +1,5 @@
+# Local CPU-friendly training config
+lookback: 14
+epochs: 3
+batch: 8
+mode: local

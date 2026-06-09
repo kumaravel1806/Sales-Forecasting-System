@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RetailForecaster Pro - AI-Powered Retail Analytics</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/api-utils.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .animate-fadeInUp {
+      animation: fadeInUp 0.8s ease-out;
+    }
+    
+    .animate-slideInLeft {
+      animation: slideInLeft 0.8s ease-out;
+    }
+    
+    .animate-slideInRight {
+      animation: slideInRight 0.8s ease-out;
+    }
+    
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .animate-pulse-slow {
+      animation: pulse 3s ease-in-out infinite;
+    }
+    
+    .gradient-bg {
+      background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c, #4facfe);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+    }
+    
+    .hero-gradient {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .feature-card {
+      transition: all 0.3s ease;
+      transform-style: preserve-3d;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-10px) rotateX(5deg);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px rgba(59, 130, 246, 0.3);
+    }
+    
+    .nav-sticky {
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+      transition: all 0.3s ease;
+    }
+    
+    .stats-counter {
+      transition: all 0.5s ease;
+    }
+    
+    .loading-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    .parallax-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: -1;
+    }
+    
+    .parallax-element {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <!-- Animated Background -->
+  <div class="parallax-bg">
+    <div class="parallax-element animate-float" style="background: #667eea; width: 300px; height: 300px; top: 10%; left: 10%; animation-delay: 0s;"></div>
+    <div class="parallax-element animate-float" style="background: #764ba2; width: 200px; height: 200px; top: 60%; right: 15%; animation-delay: 2s;"></div>
+    <div class="parallax-element animate-float" style="background: #f093fb; width: 250px; height: 250px; bottom: 20%; left: 20%; animation-delay: 4s;"></div>
+  </div>
+
+  <!-- Navigation Header -->
+  <nav id="navbar" class="fixed top-0 w-full z-50 nav-sticky border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center space-x-4 animate-slideInLeft">
+          <div class="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+            <i class="fas fa-chart-line text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">RetailForecaster Pro</h1>
+            <p class="text-xs text-gray-600">AI-Powered Analytics</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4 animate-slideInRight">
+          <button onclick="scrollToSection('features')" class="text-gray-600 hover:text-blue-600 font-medium transition-colors">
+            Features
+          </button>
+          <button onclick="scrollToSection('stats')" class="text-gray-600 hover:text-blue-600 font-medium transition-colors">
+            Status
+          </button>
+          <button onclick="location.href='/login.html'" class="btn-primary text-white px-6 py-2 rounded-lg font-medium">
+            <i class="fas fa-sign-in-alt mr-2"></i>Login
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="min-h-screen flex items-center justify-center pt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="animate-fadeInUp">
+          <div class="inline-flex items-center bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
+            <i class="fas fa-sparkles mr-2"></i>
+            AI-Powered Retail Intelligence
+          </div>
+          <h2 class="text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+            Transform Your Retail
+            <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> Business with AI</span>
+          </h2>
+          <p class="text-xl text-gray-600 mb-8">
+            Upload any dataset → Get instant charts, forecasts, and actionable insights. 
+            Powered by advanced machine learning algorithms designed for the Indian retail market.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4">
+            <button onclick="location.href='/login.html'" class="btn-primary text-white px-8 py-4 rounded-xl font-medium text-lg flex items-center justify-center">
+              <i class="fas fa-rocket mr-2"></i>
+              Get Started Free
+            </button>
+            <button onclick="quickDemo()" class="bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 px-8 py-4 rounded-xl font-medium text-lg flex items-center justify-center transition-all">
+              <i class="fas fa-play-circle mr-2"></i>
+              View Live Demo
+            </button>
+          </div>
+          
+          <div class="mt-8 flex items-center space-x-8">
+            <div class="flex items-center">
+              <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
+              <span class="text-sm text-gray-600">System Online</span>
+            </div>
+            <div class="flex items-center">
+              <i class="fas fa-shield-alt text-green-500 mr-2"></i>
+              <span class="text-sm text-gray-600">Secure Platform</span>
+            </div>
+            <div class="flex items-center">
+              <i class="fas fa-clock text-blue-500 mr-2"></i>
+              <span class="text-sm text-gray-600">Real-Time Data</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="animate-fadeInUp" style="animation-delay: 0.2s;">
+          <div class="relative">
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl transform rotate-6 opacity-20"></div>
+            <div class="relative bg-white rounded-3xl shadow-2xl p-8">
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">System Health</span>
+                  <span id="heroHealth" class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                    <i class="fas fa-spinner fa-spin mr-1"></i>Checking...
+                  </span>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4">
+                    <div class="text-2xl font-bold text-blue-600">18+</div>
+                    <div class="text-sm text-blue-800">Stores Managed</div>
+                  </div>
+                  <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-4">
+                    <div class="text-2xl font-bold text-green-600">100%</div>
+                    <div class="text-sm text-green-800">Uptime</div>
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">AI Models</span>
+                    <span class="text-green-600 font-medium">Active</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full" style="width: 100%"></div>
+                  </div>
+                </div>
+                <button onclick="adminQuickLogin()" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-3 rounded-xl font-medium transition-all">
+                  <i class="fas fa-crown mr-2"></i>Admin Quick Access
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16 animate-fadeInUp">
+        <div class="inline-flex items-center bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-medium mb-4">
+          <i class="fas fa-star mr-2"></i>
+          Powerful Features
+        </div>
+        <h3 class="text-4xl font-bold text-gray-900 mb-4">
+          Everything You Need to Grow Your Retail Business
+        </h3>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+          From data visualization to real-time analytics, our platform provides comprehensive tools for modern retail management.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Data Visualization -->
+        <div class="feature-card bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+          <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6">
+            <i class="fas fa-chart-line text-white text-2xl"></i>
+          </div>
+          <h4 class="text-xl font-bold text-gray-900 mb-3">Auto Data Visualization</h4>
+          <p class="text-gray-600 mb-6">Upload CSV/Excel files and get instant charts, graphs, and statistical analysis with interactive visualizations.</p>
+          <button onclick="location.href='/data_visualizer.html'" class="text-blue-600 hover:text-blue-800 font-semibold flex items-center group">
+            Try Now <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+          </button>
+        </div>
+
+        <!-- Real-Time Dashboard -->
+        <div class="feature-card bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+          <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center mb-6">
+            <i class="fas fa-tachometer-alt text-white text-2xl"></i>
+          </div>
+          <h4 class="text-xl font-bold text-gray-900 mb-3">Real-Time Dashboard</h4>
+          <p class="text-gray-600 mb-6">Monitor sales, revenue, feedback, and performance metrics live with interactive widgets and alerts.</p>
+          <button onclick="location.href='/realtime_dashboard.html'" class="text-blue-600 hover:text-blue-800 font-semibold flex items-center group">
+            View Dashboard <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+          </button>
+        </div>
+
+        <!-- Expiry Management -->
+        <div class="feature-card bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+          <div class="w-16 h-16 bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mb-6">
+            <i class="fas fa-clock text-white text-2xl"></i>
+          </div>
+          <h4 class="text-xl font-bold text-gray-900 mb-3">Smart Expiry Tracking</h4>
+          <p class="text-gray-600 mb-6">Automatic notifications, loss analysis, and expiry performance charts to minimize waste.</p>
+          <button onclick="location.href='/expiry_management.html'" class="text-blue-600 hover:text-blue-800 font-semibold flex items-center group">
+            Manage Expiry <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+          </button>
+        </div>
+
+        <!-- Product Management -->
+        <div class="feature-card bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+          <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6">
+            <i class="fas fa-box text-white text-2xl"></i>
+          </div>
+          <h4 class="text-xl font-bold text-gray-900 mb-3">Product Management</h4>
+          <p class="text-gray-600 mb-6">Add, edit, delete products with SKU tracking, bulk upload, and inventory management.</p>
+          <button onclick="location.href='/admin_products.html'" class="text-blue-600 hover:text-blue-800 font-semibold flex items-center group">
+            Manage Products <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+          </button>
+        </div>
+
+        <!-- Feedback System -->
+        <div class="feature-card bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+          <div class="w-16 h-16 bg-gradient-to-r from-pink-500 to-pink-600 rounded-2xl flex items-center justify-center mb-6">
+            <i class="fas fa-comments text-white text-2xl"></i>
+          </div>
+          <h4 class="text-xl font-bold text-gray-900 mb-3">Customer Feedback</h4>
+          <p class="text-gray-600 mb-6">Collect, analyze, and respond to customer feedback with advanced sentiment analysis.</p>
+          <button onclick="location.href='/admin_feedback.html'" class="text-blue-600 hover:text-blue-800 font-semibold flex items-center group">
+            View Feedback <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+          </button>
+        </div>
+
+        <!-- Shopping Experience -->
+        <div class="feature-card bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+          <div class="w-16 h-16 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6">
+            <i class="fas fa-shopping-cart text-white text-2xl"></i>
+          </div>
+          <h4 class="text-xl font-bold text-gray-900 mb-3">Shopping Portal</h4>
+          <p class="text-gray-600 mb-6">Browse products, add to cart, place orders, and submit feedback with a modern UI.</p>
+          <button onclick="location.href='/shop.html'" class="text-blue-600 hover:text-blue-800 font-semibold flex items-center group">
+            Start Shopping <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section id="stats" class="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h3 class="text-3xl font-bold text-white mb-4">Platform Statistics</h3>
+        <p class="text-blue-100">Real-time system performance and metrics</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="text-center text-white">
+          <div class="text-4xl font-bold mb-2 stats-counter" data-target="100">0</div>
+          <div class="text-blue-100">System Health</div>
+        </div>
+        <div class="text-center text-white">
+          <div class="text-4xl font-bold mb-2 stats-counter" data-target="18">0</div>
+          <div class="text-blue-100">Active Stores</div>
+        </div>
+        <div class="text-center text-white">
+          <div class="text-4xl font-bold mb-2 stats-counter" data-target="24">0</div>
+          <div class="text-blue-100">Hours Uptime</div>
+        </div>
+        <div class="text-center text-white">
+          <div class="text-4xl font-bold mb-2 stats-counter" data-target="99">0</div>
+          <div class="text-blue-100">AI Accuracy %</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-20">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12 text-white relative overflow-hidden">
+        <div class="absolute inset-0 bg-black opacity-10"></div>
+        <div class="relative z-10">
+          <h3 class="text-4xl font-bold mb-4">Ready to Transform Your Retail Business?</h3>
+          <p class="text-xl mb-8 text-blue-100">
+            Join thousands of retailers using AI to make data-driven decisions and boost their profits.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button onclick="location.href='/login.html'" class="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 rounded-xl font-medium text-lg transition-all">
+              <i class="fas fa-rocket mr-2"></i>Get Started Now
+            </button>
+            <button onclick="adminQuickLogin()" class="bg-blue-700 hover:bg-blue-800 text-white px-8 py-4 rounded-xl font-medium text-lg transition-all">
+              <i class="fas fa-crown mr-2"></i>Admin Access
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <div class="flex items-center space-x-3 mb-4">
+            <div class="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <i class="fas fa-chart-line text-white text-xl"></i>
+            </div>
+            <h4 class="text-xl font-bold">RetailForecaster Pro</h4>
+          </div>
+          <p class="text-gray-400">AI-Powered Retail Analytics Platform for the Modern Business.</p>
+        </div>
+        
+        <div>
+          <h5 class="font-semibold mb-4">Quick Links</h5>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="/login.html" class="hover:text-white transition-colors">Login</a></li>
+            <li><a href="/shop.html" class="hover:text-white transition-colors">Shop</a></li>
+            <li><a href="/admin_dashboard.html" class="hover:text-white transition-colors">Admin</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h5 class="font-semibold mb-4">Features</h5>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="/data_visualizer.html" class="hover:text-white transition-colors">Data Visualization</a></li>
+            <li><a href="/realtime_dashboard.html" class="hover:text-white transition-colors">Real-Time Analytics</a></li>
+            <li><a href="/scenario.html" class="hover:text-white transition-colors">Scenario Analysis</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h5 class="font-semibold mb-4">System Status</h5>
+          <div class="space-y-2">
+            <div class="flex items-center text-green-400">
+              <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+              <span>All Systems Operational</span>
+            </div>
+            <div class="text-sm text-gray-400">
+              <p>Uptime: 99.9%</p>
+              <p>Response Time: 45ms</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+        <p>&copy; 2024 RetailForecaster Pro. Transform your business with intelligent data insights.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    console.log('Modern homepage loaded');
+
+    // Smooth scroll to section
+    function scrollToSection(sectionId) {
+      const section = document.getElementById(sectionId);
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    // Check backend health
+    async function checkHealth() {
+      const heroHealthEl = document.getElementById('heroHealth');
+      
+      try {
+        const response = await fetch('/api/health');
+        const result = await response.json();
+        
+        if (result.success) {
+          heroHealthEl.innerHTML = '<i class="fas fa-check mr-1"></i>Online';
+          heroHealthEl.className = 'px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium';
+        } else {
+          throw new Error('Backend unhealthy');
+        }
+      } catch (error) {
+        heroHealthEl.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Offline';
+        heroHealthEl.className = 'px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium';
+      }
+    }
+
+    // Quick demo function
+    function quickDemo() {
+      location.href = '/data_visualizer.html';
+    }
+
+    // Admin quick login
+    async function adminQuickLogin() {
+      try {
+        console.log('Starting admin quick login...');
+        
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'admin@example.com',
+            password: 'password'
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Login response:', result);
+        
+        if (result.success && result.data && result.data.token) {
+          localStorage.setItem('retail_jwt', result.data.token);
+          console.log('Admin login successful, redirecting...');
+          window.location.href = '/admin_dashboard.html';
+        } else {
+          throw new Error(result.meta?.error || 'Admin login failed');
+        }
+        
+      } catch (error) {
+        console.error('Admin quick login error:', error);
+        alert(`Admin login failed: ${error.message}. Redirecting to login page.`);
+        window.location.href = '/login.html';
+      }
+    }
+
+    // Animated counter
+    function animateCounter() {
+      const counters = document.querySelectorAll('.stats-counter');
+      
+      counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target'));
+        const increment = target / 100;
+        let current = 0;
+        
+        const updateCounter = () => {
+          current += increment;
+          if (current < target) {
+            counter.textContent = Math.ceil(current);
+            requestAnimationFrame(updateCounter);
+          } else {
+            counter.textContent = target;
+          }
+        };
+        
+        updateCounter();
+      });
+    }
+
+    // Navbar scroll effect
+    window.addEventListener('scroll', () => {
+      const navbar = document.getElementById('navbar');
+      if (window.scrollY > 50) {
+        navbar.classList.add('shadow-lg');
+      } else {
+        navbar.classList.remove('shadow-lg');
+      }
+    });
+
+    // Intersection Observer for animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+
+    // Observe feature cards
+    document.addEventListener('DOMContentLoaded', () => {
+      const featureCards = document.querySelectorAll('.feature-card');
+      featureCards.forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = 'all 0.6s ease';
+        observer.observe(card);
+      });
+
+      // Initialize counters when stats section is visible
+      const statsSection = document.getElementById('stats');
+      const statsObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            animateCounter();
+            statsObserver.unobserve(entry.target);
+          }
+        });
+      }, observerOptions);
+      
+      statsObserver.observe(statsSection);
+    });
+
+    // Initialize page
+    window.addEventListener('load', () => {
+      checkHealth();
+    });
+  </script>
+</body>
+</html>

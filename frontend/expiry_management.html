@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Expiry Management & Analysis</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="max-w-7xl mx-auto p-4">
+    <header class="py-6">
+      <div class="flex gap-4 text-sm mb-4">
+        <button onclick="history.back()" class="text-sky-600 hover:text-sky-800">← Back</button>
+        <a href="/admin_dashboard.html" class="text-sky-600 hover:text-sky-800">🏠 Dashboard</a>
+        <button onclick="localStorage.removeItem('retail_jwt'); location.href='/login.html'" class="text-red-600 hover:text-red-800">Logout</button>
+      </div>
+      <h1 class="text-2xl font-bold text-sky-700">Expiry Management & Analysis</h1>
+      <p class="text-sm text-slate-600">Track product expiry dates, get notifications, and analyze expired product performance</p>
+    </header>
+
+    <main class="space-y-6">
+      <!-- Notifications Panel -->
+      <section class="p-6 bg-gradient-to-r from-red-50 to-orange-50 rounded-lg border border-red-200">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-red-800">🚨 Expiry Notifications</h2>
+          <button onclick="checkExpiries()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm">
+            Check Expiries Now
+          </button>
+        </div>
+        <div id="notificationsPanel" class="space-y-2">
+          <div class="text-sm text-red-600">Loading notifications...</div>
+        </div>
+      </section>
+
+      <!-- Expired Products Analysis -->
+      <section class="p-6 bg-white rounded-lg shadow">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold">Expired Products Analysis</h2>
+          <div class="flex gap-2">
+            <button onclick="showExpiredProducts()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">
+              Show Expired Products
+            </button>
+            <button onclick="performExpiryAnalysis()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">
+              Perform Analysis
+            </button>
+          </div>
+        </div>
+
+        <!-- Three Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Column 1: Expired Products List -->
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-medium mb-3 text-red-700">Expired Products</h3>
+            <div id="expiredProductsList" class="space-y-2 max-h-64 overflow-y-auto">
+              <div class="text-sm text-gray-500">Click "Show Expired Products" to load</div>
+            </div>
+          </div>
+
+          <!-- Column 2: Expiring Soon -->
+          <div class="bg-yellow-50 p-4 rounded-lg">
+            <h3 class="font-medium mb-3 text-yellow-700">Expiring Soon (7 days)</h3>
+            <div id="expiringSoonList" class="space-y-2 max-h-64 overflow-y-auto">
+              <div class="text-sm text-gray-500">Loading...</div>
+            </div>
+          </div>
+
+          <!-- Column 3: Analysis Summary -->
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <h3 class="font-medium mb-3 text-blue-700">Analysis Summary</h3>
+            <div id="analysisSummary" class="space-y-2">
+              <div class="text-sm text-gray-500">Click "Perform Analysis" to generate</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Performance Charts -->
+      <section id="chartsSection" class="hidden p-6 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-4">Expired Product Performance Analysis</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-medium mb-2">Expiry Trends Over Time</h3>
+            <canvas id="expiryTrendsChart" width="400" height="200"></canvas>
+          </div>
+          <div>
+            <h3 class="font-medium mb-2">Loss by Product Category</h3>
+            <canvas id="lossChart" width="400" height="200"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Add Product with Expiry -->
+      <section class="p-6 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-4">Add Product with Expiry Date</h2>
+        <form id="addProductForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <input name="name" placeholder="Product Name" class="border rounded p-3" required />
+          <input name="price" type="number" step="0.01" placeholder="Price" class="border rounded p-3" required />
+          <input name="expiry_date" type="date" class="border rounded p-3" required />
+          <input name="sku" placeholder="SKU (Stock Keeping Unit)" class="border rounded p-3" />
+          <select name="category" class="border rounded p-3">
+            <option value="Food">Food</option>
+            <option value="Medicine">Medicine</option>
+            <option value="Cosmetics">Cosmetics</option>
+            <option value="Electronics">Electronics</option>
+            <option value="General">General</option>
+          </select>
+          <textarea name="description" placeholder="Description" class="border rounded p-3 md:col-span-2"></textarea>
+          <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded font-medium">
+            Add Product
+          </button>
+        </form>
+        <div id="addProductMsg" class="text-sm mt-2"></div>
+        <div class="text-xs text-gray-500 mt-2">
+          <strong>SKU:</strong> Stock Keeping Unit - A unique identifier for inventory tracking (e.g., "FOOD001", "MED-ASPIRIN-100MG")
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = location.origin.startsWith('http://localhost:5173') ? 'http://localhost:8000' : '';
+    const TOKEN_KEY = 'retail_jwt';
+    
+    function getAuthHeaders() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      };
+    }
+
+    let expiryTrendsChart = null;
+    let lossChart = null;
+
+    // Check expiries and show notifications
+    async function checkExpiries() {
+      try {
+        const res = await fetch(API_BASE + '/api/admin/check-expiries', {
+          headers: getAuthHeaders()
+        });
+        const result = await res.json();
+        
+        const panel = document.getElementById('notificationsPanel');
+        if (result.success && result.data.notifications.length > 0) {
+          panel.innerHTML = result.data.notifications.map(notif => `
+            <div class="flex items-center gap-3 p-3 bg-white rounded border-l-4 border-red-500">
+              <span class="text-red-600">⚠️</span>
+              <div class="flex-1">
+                <div class="font-medium text-red-800">${notif.title}</div>
+                <div class="text-sm text-red-600">${notif.message}</div>
+              </div>
+              <div class="text-xs text-red-500">${new Date(notif.created_at).toLocaleDateString()}</div>
+            </div>
+          `).join('');
+        } else {
+          panel.innerHTML = '<div class="text-green-600 font-medium">✅ No expiry issues found!</div>';
+        }
+        
+        // Also load expiring soon
+        loadExpiringSoon();
+        
+      } catch (err) {
+        document.getElementById('notificationsPanel').innerHTML = 
+          `<div class="text-red-600">Error checking expiries: ${err.message}</div>`;
+      }
+    }
+
+    // Show expired products and allow deleting them
+    async function showExpiredProducts() {
+      try {
+        const res = await fetch(API_BASE + '/api/admin/expired-products', {
+          headers: getAuthHeaders()
+        });
+        const result = await res.json();
+        
+        const list = document.getElementById('expiredProductsList');
+        if (result.success && result.data.length > 0) {
+          list.innerHTML = result.data.map(product => `
+            <div class="bg-white p-3 rounded border border-red-200">
+              <div class="font-medium text-red-800">${product.name}</div>
+              <div class="text-sm text-red-600">SKU: ${product.sku || 'N/A'}</div>
+              <div class="text-xs text-red-500">Expired: ${new Date(product.expiry_date).toLocaleDateString()}</div>
+              <div class="text-xs text-gray-600">Days overdue: ${product.days_overdue}</div>
+              <div class="mt-2 flex items-center justify-between">
+                <span class="text-xs text-gray-500">Category: ${product.category || 'General'}</span>
+                <button
+                  type="button"
+                  onclick="deleteExpiredProduct(${product.id})"
+                  class="text-xs px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-white">
+                  🗑️ Delete
+                </button>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          list.innerHTML = '<div class="text-green-600">No expired products found!</div>';
+        }
+      } catch (err) {
+        document.getElementById('expiredProductsList').innerHTML = 
+          `<div class="text-red-600">Error: ${err.message}</div>`;
+      }
+    }
+
+    // Delete an expired product (removes it from inventory)
+    async function deleteExpiredProduct(productId) {
+      if (!confirm('Are you sure you want to delete this expired product from inventory?')) return;
+      
+      try {
+        const res = await fetch(API_BASE + `/api/admin/products/${productId}/delete`, {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        });
+        const result = await res.json();
+        
+        if (result.success) {
+          // Refresh lists and notifications after delete
+          showExpiredProducts();
+          checkExpiries();
+        } else {
+          alert(`Failed to delete product: ${result.meta?.error || 'Unknown error'}`);
+        }
+      } catch (err) {
+        alert(`Error deleting product: ${err.message}`);
+      }
+    }
+
+    // Load expiring soon products
+    async function loadExpiringSoon() {
+      try {
+        const res = await fetch(API_BASE + '/api/admin/expiring-soon', {
+          headers: getAuthHeaders()
+        });
+        const result = await res.json();
+        
+        const list = document.getElementById('expiringSoonList');
+        if (result.success && result.data.length > 0) {
+          list.innerHTML = result.data.map(product => `
+            <div class="bg-white p-3 rounded border border-yellow-200">
+              <div class="font-medium text-yellow-800">${product.name}</div>
+              <div class="text-sm text-yellow-600">SKU: ${product.sku || 'N/A'}</div>
+              <div class="text-xs text-yellow-600">Expires: ${new Date(product.expiry_date).toLocaleDateString()}</div>
+              <div class="text-xs text-gray-600">Days left: ${product.days_left}</div>
+            </div>
+          `).join('');
+        } else {
+          list.innerHTML = '<div class="text-green-600">No products expiring soon!</div>';
+        }
+      } catch (err) {
+        document.getElementById('expiringSoonList').innerHTML = 
+          `<div class="text-yellow-600">Error: ${err.message}</div>`;
+      }
+    }
+
+    // Perform expiry analysis
+    async function performExpiryAnalysis() {
+      try {
+        const res = await fetch(API_BASE + '/api/admin/expiry-analysis', {
+          headers: getAuthHeaders()
+        });
+        const result = await res.json();
+        
+        if (result.success) {
+          // Update summary
+          const summary = document.getElementById('analysisSummary');
+          const data = result.data;
+          summary.innerHTML = `
+            <div class="space-y-2">
+              <div class="flex justify-between">
+                <span class="text-sm">Total Expired:</span>
+                <span class="font-medium text-red-600">${data.total_expired}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-sm">Expiring Soon:</span>
+                <span class="font-medium text-yellow-600">${data.expiring_soon}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-sm">Estimated Loss:</span>
+                <span class="font-medium text-red-600">₹${data.estimated_loss?.toFixed(2) || '0.00'}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-sm">Avg Days Overdue:</span>
+                <span class="font-medium">${data.avg_days_overdue?.toFixed(1) || '0'}</span>
+              </div>
+            </div>
+          `;
+          
+          // Generate charts
+          if (data.charts) {
+            generateExpiryCharts(data.charts);
+            document.getElementById('chartsSection').classList.remove('hidden');
+          }
+        }
+      } catch (err) {
+        document.getElementById('analysisSummary').innerHTML = 
+          `<div class="text-red-600">Error: ${err.message}</div>`;
+      }
+    }
+
+    // Generate expiry analysis charts
+    function generateExpiryCharts(chartsData) {
+      // Expiry trends chart
+      if (chartsData.trends && expiryTrendsChart) {
+        expiryTrendsChart.destroy();
+      }
+      if (chartsData.trends) {
+        expiryTrendsChart = new Chart(document.getElementById('expiryTrendsChart'), {
+          type: 'line',
+          data: chartsData.trends,
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'bottom' }
+            }
+          }
+        });
+      }
+
+      // Loss by category chart
+      if (chartsData.loss && lossChart) {
+        lossChart.destroy();
+      }
+      if (chartsData.loss) {
+        lossChart = new Chart(document.getElementById('lossChart'), {
+          type: 'doughnut',
+          data: chartsData.loss,
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'bottom' }
+            }
+          }
+        });
+      }
+    }
+
+    // Add product form handler
+    document.getElementById('addProductForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('addProductMsg');
+      msg.textContent = 'Adding product...';
+      msg.className = 'text-sm mt-2 text-blue-600';
+      
+      try {
+        const fd = new FormData(e.target);
+        const body = {
+          name: fd.get('name'),
+          price: parseFloat(fd.get('price')),
+          expiry_date: fd.get('expiry_date'),
+          sku: fd.get('sku') || null,
+          category: fd.get('category'),
+          description: fd.get('description') || null
+        };
+        
+        const res = await fetch(API_BASE + '/api/products/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('retail_jwt')
+          },
+          body: JSON.stringify(body)
+        });
+        
+        const result = await res.json();
+        if (result.success) {
+          msg.textContent = 'Product added successfully with expiry tracking!';
+          msg.className = 'text-sm mt-2 text-green-600';
+          e.target.reset();
+          
+          // Refresh expiry data
+          checkExpiries();
+        } else {
+          msg.textContent = `Error: ${result.meta?.error || 'Failed to add product'}`;
+          msg.className = 'text-sm mt-2 text-red-600';
+        }
+      } catch (err) {
+        msg.textContent = `Network error: ${err.message}`;
+        msg.className = 'text-sm mt-2 text-red-600';
+      }
+    });
+
+    // Auto-check expiries and load expired products on page load
+    checkExpiries();
+    showExpiredProducts();
+    
+    // Set up auto-refresh every 5 minutes
+    setInterval(checkExpiries, 5 * 60 * 1000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Real-Time Analytics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .live-indicator {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        
+        .data-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .data-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .metric-number {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.02em;
+        }
+        
+        .status-online {
+            animation: breathe 3s infinite;
+        }
+        
+        @keyframes breathe {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .alert-flash {
+            animation: flash 0.5s ease-in-out;
+        }
+        
+        @keyframes flash {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: rgba(239, 68, 68, 0.2); }
+        }
+        
+        .number-transition {
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-white">
+    <!-- Header -->
+    <header class="glass-morphism border-b border-white/10 sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <i data-lucide="activity" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-white">National Analytics Dashboard</h1>
+                            <p class="text-xs text-gray-400">Real-Time Monitoring System</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-green-500 rounded-full live-indicator"></div>
+                            <span class="text-green-400 text-sm font-medium">LIVE</span>
+                        </div>
+                        <div class="text-xs text-gray-400">
+                            Last Update: <span id="lastUpdate" class="text-white font-mono">--:--:--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 text-sm">
+                        <i data-lucide="users" class="w-4 h-4 text-gray-400"></i>
+                        <span class="text-gray-400">Active Sessions:</span>
+                        <span id="activeSessions" class="text-white font-medium">0</span>
+                    </div>
+                    <div class="flex items-center space-x-2 text-sm">
+                        <div class="w-2 h-2 bg-green-500 rounded-full status-online"></div>
+                        <span class="text-green-400">System Online</span>
+                    </div>
+                    <button onclick="requestManualRefresh()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm transition-colors flex items-center space-x-2">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Critical Metrics Row -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            <!-- Total Products -->
+            <div class="data-card rounded-xl p-6 border-l-4 border-blue-500">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <i data-lucide="package" class="w-5 h-5 text-blue-400"></i>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span class="text-xs text-green-400">Live</span>
+                    </div>
+                </div>
+                <div class="text-xs text-gray-400 mb-1">TOTAL PRODUCTS</div>
+                <div id="totalProducts" class="text-3xl font-bold text-white metric-number number-transition">0</div>
+                <div class="text-xs text-gray-500 mt-2">National Inventory</div>
+            </div>
+
+            <!-- In Stock -->
+            <div class="data-card rounded-xl p-6 border-l-4 border-green-500">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-green-400"></i>
+                    </div>
+                    <div class="text-xs text-green-400 font-medium">Normal</div>
+                </div>
+                <div class="text-xs text-gray-400 mb-1">IN STOCK</div>
+                <div id="inStock" class="text-3xl font-bold text-white metric-number number-transition">0</div>
+                <div class="text-xs text-gray-500 mt-2">Available Items</div>
+            </div>
+
+            <!-- Low Stock -->
+            <div class="data-card rounded-xl p-6 border-l-4 border-amber-500">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-400"></i>
+                    </div>
+                    <div class="text-xs text-amber-400 font-medium">Warning</div>
+                </div>
+                <div class="text-xs text-gray-400 mb-1">LOW STOCK</div>
+                <div id="lowStock" class="text-3xl font-bold text-white metric-number number-transition">0</div>
+                <div class="text-xs text-gray-500 mt-2">Needs Restock</div>
+            </div>
+
+            <!-- Out of Stock -->
+            <div class="data-card rounded-xl p-6 border-l-4 border-red-500">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                        <i data-lucide="x-circle" class="w-5 h-5 text-red-400"></i>
+                    </div>
+                    <div class="text-xs text-red-400 font-medium">Critical</div>
+                </div>
+                <div class="text-xs text-gray-400 mb-1">OUT OF STOCK</div>
+                <div id="outOfStock" class="text-3xl font-bold text-white metric-number number-transition">0</div>
+                <div class="text-xs text-gray-500 mt-2">Unavailable</div>
+            </div>
+
+            <!-- Total Value -->
+            <div class="data-card rounded-xl p-6 border-l-4 border-purple-500">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                        <i data-lucide="indian-rupee" class="w-5 h-5 text-purple-400"></i>
+                    </div>
+                    <div class="text-xs text-purple-400 font-medium">Assets</div>
+                </div>
+                <div class="text-xs text-gray-400 mb-1">TOTAL VALUE</div>
+                <div id="totalValue" class="text-2xl font-bold text-white metric-number number-transition">₹0</div>
+                <div class="text-xs text-gray-500 mt-2">Inventory Worth</div>
+            </div>
+        </section>
+
+        <!-- Real-Time Charts Section -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Live Inventory Status -->
+            <div class="data-card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold text-white">Live Inventory Status</h2>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span class="text-xs text-green-400">Real-Time</span>
+                    </div>
+                </div>
+                <div class="h-64">
+                    <canvas id="inventoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Category Distribution -->
+            <div class="data-card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold text-white">Category Distribution</h2>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                        <span class="text-xs text-blue-400">Live</span>
+                    </div>
+                </div>
+                <div class="h-64">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Orders and Expiry Section -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <!-- Today's Orders -->
+            <div class="data-card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold text-white">Today's Orders</h2>
+                    <div class="bg-green-500/20 px-3 py-1 rounded-full">
+                        <span class="text-xs text-green-400 font-medium">Live</span>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div id="todayOrders" class="text-4xl font-bold text-white metric-number number-transition mb-2">0</div>
+                    <div class="text-sm text-gray-400 mb-4">Orders Processed</div>
+                    <div class="text-2xl font-bold text-green-400 metric-number number-transition">₹<span id="todayRevenue">0</span></div>
+                    <div class="text-xs text-gray-500">Revenue Generated</div>
+                </div>
+            </div>
+
+            <!-- Expiry Alerts -->
+            <div class="data-card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold text-white">Expiry Monitoring</h2>
+                    <div class="bg-red-500/20 px-3 py-1 rounded-full">
+                        <span class="text-xs text-red-400 font-medium">Critical</span>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center p-3 bg-red-500/10 rounded-lg border border-red-500/30">
+                        <div>
+                            <div class="text-sm text-red-400 font-medium">Expired</div>
+                            <div class="text-xs text-gray-500">Remove Immediately</div>
+                        </div>
+                        <div id="expired" class="text-2xl font-bold text-red-400 metric-number number-transition">0</div>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-orange-500/10 rounded-lg border border-orange-500/30">
+                        <div>
+                            <div class="text-sm text-orange-400 font-medium">Near Expiry</div>
+                            <div class="text-xs text-gray-500">Within 7 Days</div>
+                        </div>
+                        <div id="nearExpiry" class="text-2xl font-bold text-orange-400 metric-number number-transition">0</div>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-amber-500/10 rounded-lg border border-amber-500/30">
+                        <div>
+                            <div class="text-sm text-amber-400 font-medium">Expiring Soon</div>
+                            <div class="text-xs text-gray-500">Within 30 Days</div>
+                        </div>
+                        <div id="expiringSoon" class="text-2xl font-bold text-amber-400 metric-number number-transition">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="data-card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold text-white">System Status</h2>
+                    <div class="bg-green-500/20 px-3 py-1 rounded-full">
+                        <span class="text-xs text-green-400 font-medium">Online</span>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-400">Server Status</span>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span id="serverStatus" class="text-sm text-green-400">Online</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-400">Database</span>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span id="dbStatus" class="text-sm text-green-400">Connected</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-400">Data Freshness</span>
+                        <span id="dataFreshness" class="text-sm text-blue-400">Real-Time</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-400">Update Frequency</span>
+                        <span class="text-sm text-purple-400">2 Seconds</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-400">Response Time</span>
+                        <span id="responseTime" class="text-sm text-green-400">< 50ms</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Data Feed -->
+        <section class="data-card rounded-xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-semibold text-white">Live Data Feed</h2>
+                <div class="flex items-center space-x-4">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span class="text-xs text-green-400">Streaming</span>
+                    <button onclick="clearFeed()" class="text-xs text-gray-400 hover:text-white transition-colors">
+                        Clear Feed
+                    </button>
+                </div>
+            </div>
+            <div id="dataFeed" class="h-48 overflow-y-auto scrollbar-thin space-y-2 font-mono text-xs">
+                <div class="text-gray-500">Waiting for data stream...</div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Global variables
+        let socket;
+        let inventoryChart, categoryChart;
+        let lastData = {};
+        let updateCount = 0;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            connectWebSocket();
+            startClock();
+            lucide.createIcons();
+        });
+
+        function connectWebSocket() {
+            // Connect to the real-time server
+            socket = io('http://localhost:8001');
+            
+            socket.on('connect', function() {
+                console.log('Connected to real-time server');
+                addFeedEntry('Connected to real-time data stream', 'success');
+            });
+            
+            socket.on('initial_data', function(data) {
+                console.log('Received initial data:', data);
+                updateDashboard(data);
+                addFeedEntry('Initial data loaded', 'info');
+            });
+            
+            socket.on('real_time_update', function(data) {
+                console.log('Real-time update:', data);
+                updateDashboard(data);
+                updateCount++;
+                
+                // Add feed entry every 10 updates to avoid spam
+                if (updateCount % 10 === 0) {
+                    addFeedEntry(`Data update #${updateCount} received`, 'update');
+                }
+            });
+            
+            socket.on('disconnect', function() {
+                console.log('Disconnected from server');
+                addFeedEntry('Disconnected from server', 'error');
+            });
+        }
+
+        function initializeCharts() {
+            // Inventory Status Chart
+            const inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
+            inventoryChart = new Chart(inventoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['In Stock', 'Low Stock', 'Out of Stock'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: [
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(251, 146, 60, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(34, 197, 94)',
+                            'rgb(251, 146, 60)',
+                            'rgb(239, 68, 68)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                padding: 20,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Category Distribution Chart
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            categoryChart = new Chart(categoryCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Products',
+                        data: [],
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateDashboard(data) {
+            // Store previous data for comparison
+            const previousData = { ...lastData };
+            lastData = data;
+            
+            // Update metrics with animations
+            animateValue('totalProducts', previousData.total_products || 0, data.total_products || 0);
+            animateValue('inStock', previousData.inventory?.in_stock || 0, data.inventory?.in_stock || 0);
+            animateValue('lowStock', previousData.inventory?.low_stock || 0, data.inventory?.low_stock || 0);
+            animateValue('outOfStock', previousData.inventory?.out_of_stock || 0, data.inventory?.out_of_stock || 0);
+            
+            // Update value with formatting
+            const valueElement = document.getElementById('totalValue');
+            const currentValue = parseInt(valueElement.textContent.replace(/[^0-9]/g, '')) || 0;
+            animateValue('totalValue', currentValue, data.inventory?.total_value || 0, true);
+            
+            // Update orders
+            animateValue('todayOrders', previousData.orders?.today_orders || 0, data.orders?.today_orders || 0);
+            animateValue('todayRevenue', previousData.orders?.today_revenue || 0, data.orders?.today_revenue || 0, true);
+            
+            // Update expiry
+            animateValue('expired', previousData.expiry?.expired || 0, data.expiry?.expired || 0);
+            animateValue('nearExpiry', previousData.expiry?.near_expiry || 0, data.expiry?.near_expiry || 0);
+            animateValue('expiringSoon', previousData.expiry?.expiring_soon || 0, data.expiry?.expiring_soon || 0);
+            
+            // Update system status
+            document.getElementById('serverStatus').textContent = data.system_status?.server_status || 'Unknown';
+            document.getElementById('dbStatus').textContent = data.system_status?.database_status || 'Unknown';
+            document.getElementById('dataFreshness').textContent = data.system_status?.data_freshness || 'Unknown';
+            document.getElementById('activeSessions').textContent = data.system_status?.active_sessions || 0;
+            
+            // Update last update time
+            updateLastUpdateTime(data.timestamp);
+            
+            // Update charts
+            updateInventoryChart(data.inventory);
+            updateCategoryChart(data.categories);
+            
+            // Check for alerts
+            checkForAlerts(data, previousData);
+        }
+
+        function animateValue(elementId, start, end, isCurrency = false) {
+            const element = document.getElementById(elementId);
+            const duration = 600;
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                const currentValue = start + (end - start) * easeOutQuad(progress);
+                
+                if (isCurrency) {
+                    element.textContent = '₹' + Math.round(currentValue).toLocaleString('en-IN');
+                } else {
+                    element.textContent = Math.round(currentValue).toLocaleString('en-IN');
+                }
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+            
+            requestAnimationFrame(update);
+        }
+
+        function easeOutQuad(t) {
+            return t * (2 - t);
+        }
+
+        function updateInventoryChart(inventory) {
+            if (!inventory || !inventoryChart) return;
+            
+            inventoryChart.data.datasets[0].data = [
+                inventory.in_stock || 0,
+                inventory.low_stock || 0,
+                inventory.out_of_stock || 0
+            ];
+            inventoryChart.update('none'); // Update without animation for real-time feel
+        }
+
+        function updateCategoryChart(categories) {
+            if (!categories || !categoryChart) return;
+            
+            const labels = categories.map(cat => cat.name);
+            const data = categories.map(cat => cat.count);
+            
+            categoryChart.data.labels = labels;
+            categoryChart.data.datasets[0].data = data;
+            categoryChart.update('none');
+        }
+
+        function updateLastUpdateTime(timestamp) {
+            if (timestamp) {
+                const date = new Date(timestamp);
+                document.getElementById('lastUpdate').textContent = date.toLocaleTimeString('en-IN');
+            }
+        }
+
+        function checkForAlerts(data, previousData) {
+            // Check for critical changes
+            if (data.inventory?.out_of_stock > (previousData.inventory?.out_of_stock || 0)) {
+                addFeedEntry('⚠️ CRITICAL: Product went out of stock', 'error');
+                flashAlert('outOfStock');
+            }
+            
+            if (data.expiry?.expired > (previousData.expiry?.expired || 0)) {
+                addFeedEntry('🚨 ALERT: Product expired', 'error');
+                flashAlert('expired');
+            }
+            
+            if (data.orders?.today_orders > (previousData.orders?.today_orders || 0)) {
+                addFeedEntry('📈 New order received', 'success');
+            }
+        }
+
+        function flashAlert(elementId) {
+            const element = document.getElementById(elementId).parentElement.parentElement;
+            element.classList.add('alert-flash');
+            setTimeout(() => {
+                element.classList.remove('alert-flash');
+            }, 500);
+        }
+
+        function addFeedEntry(message, type = 'info') {
+            const feed = document.getElementById('dataFeed');
+            const timestamp = new Date().toLocaleTimeString('en-IN');
+            
+            const colors = {
+                'success': 'text-green-400',
+                'error': 'text-red-400',
+                'warning': 'text-amber-400',
+                'info': 'text-blue-400',
+                'update': 'text-purple-400'
+            };
+            
+            const entry = document.createElement('div');
+            entry.className = `${colors[type]} p-2 rounded border border-white/10`;
+            entry.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> ${message}`;
+            
+            feed.appendChild(entry);
+            
+            // Keep only last 50 entries
+            while (feed.children.length > 50) {
+                feed.removeChild(feed.firstChild);
+            }
+            
+            // Auto-scroll to bottom
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        function clearFeed() {
+            const feed = document.getElementById('dataFeed');
+            feed.innerHTML = '<div class="text-gray-500">Feed cleared...</div>';
+        }
+
+        function requestManualRefresh() {
+            if (socket) {
+                socket.emit('request_refresh');
+                addFeedEntry('Manual refresh requested', 'info');
+            }
+        }
+
+        function startClock() {
+            setInterval(() => {
+                const now = new Date();
+                // Clock is already in the header with last update time
+            }, 1000);
+        }
+
+        // Handle page visibility
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                addFeedEntry('Dashboard paused', 'warning');
+            } else {
+                addFeedEntry('Dashboard resumed', 'success');
+            }
+        });
+
+        // Handle connection errors
+        window.addEventListener('online', function() {
+            addFeedEntry('Connection restored', 'success');
+        });
+
+        window.addEventListener('offline', function() {
+            addFeedEntry('Connection lost', 'error');
+        });
+    </script>
+</body>
+</html>

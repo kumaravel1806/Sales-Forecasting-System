@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scenario Analysis & Pipeline</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="max-w-5xl mx-auto p-4">
+    <header class="py-6 flex items-center justify-between">
+      <div>
+        <div class="flex gap-4 text-sm">
+          <button onclick="history.back()" class="text-sky-600 hover:text-sky-800">← Back</button>
+          <a href="/admin_dashboard.html" class="text-sky-600 hover:text-sky-800">🏠 Dashboard</a>
+          <button onclick="localStorage.removeItem('retail_jwt'); location.href='/login.html'" class="text-red-600 hover:text-red-800">Logout</button>
+        </div>
+        <h1 class="text-2xl font-bold text-sky-700 mt-2">Scenario Analysis & Pipeline</h1>
+      </div>
+    </header>
+
+    <main class="space-y-8">
+      <!-- Hero Section -->
+      <section class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl text-white p-8 text-center">
+        <h2 class="text-3xl font-bold mb-2">📈 Scenario Analysis</h2>
+        <p class="text-purple-100">Predict sales performance with different scenarios</p>
+      </section>
+      
+      <!-- Scenario Configuration -->
+      <section class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">⚙️ Configure Scenario</h2>
+        
+        <form id="scenarioForm" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Product Selection -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Select Product</label>
+              <select id="productSelect" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500" required>
+                <option value="">Choose a product...</option>
+                <option value="all">All Products</option>
+              </select>
+            </div>
+            
+            <!-- Store Selection -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Store (Optional)</label>
+              <select id="storeSelect" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500">
+                <option value="">All Stores</option>
+                <!-- Stores loaded dynamically from database -->
+              </select>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Days -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Forecast Days</label>
+              <input type="number" id="forecastDays" min="1" max="365" value="30" 
+                     class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500" required>
+              <p class="text-xs text-gray-500 mt-1">Number of days to forecast (1-365)</p>
+            </div>
+            
+            <!-- Season -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Season</label>
+              <select id="seasonSelect" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500" required>
+                <option value="current">Current Season</option>
+                <option value="spring">🌸 Spring</option>
+                <option value="summer">☀️ Summer</option>
+                <option value="autumn">🍂 Autumn</option>
+                <option value="winter">❄️ Winter</option>
+                <option value="holiday">🎄 Holiday Season</option>
+                <option value="back_to_school">🎒 Back to School</option>
+              </select>
+            </div>
+            
+            <!-- Discount -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Discount (%)</label>
+              <input type="number" id="discountPercent" min="0" max="90" value="0" step="5"
+                     class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500" required>
+              <p class="text-xs text-gray-500 mt-1">Discount percentage (0-90%)</p>
+            </div>
+          </div>
+          
+          <!-- Additional Parameters -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Marketing Campaign</label>
+              <select id="marketingCampaign" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500">
+                <option value="none">No Campaign</option>
+                <option value="social_media">📱 Social Media</option>
+                <option value="email">📧 Email Marketing</option>
+                <option value="tv_radio">📺 TV/Radio</option>
+                <option value="influencer">🌟 Influencer</option>
+                <option value="combined">🚀 Combined Campaign</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Market Conditions</label>
+              <select id="marketConditions" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500">
+                <option value="normal">Normal</option>
+                <option value="recession">📉 Economic Downturn</option>
+                <option value="boom">📈 Economic Boom</option>
+                <option value="competitive">⚔️ High Competition</option>
+                <option value="supply_shortage">🚚 Supply Shortage</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="flex justify-center">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium text-lg">
+              📈 Run Scenario Analysis
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Results Section -->
+      <section id="resultsSection" class="hidden bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">📈 Scenario Results</h2>
+        
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div class="bg-blue-50 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-blue-600" id="predictedSales">₹0</div>
+            <div class="text-sm text-blue-800">Predicted Sales</div>
+          </div>
+          <div class="bg-green-50 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-green-600" id="revenueIncrease">+0%</div>
+            <div class="text-sm text-green-800">Revenue Change</div>
+          </div>
+          <div class="bg-purple-50 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-purple-600" id="unitsSold">0</div>
+            <div class="text-sm text-purple-800">Units Sold</div>
+          </div>
+          <div class="bg-orange-50 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-orange-600" id="profitMargin">0%</div>
+            <div class="text-sm text-orange-800">Profit Margin</div>
+          </div>
+        </div>
+        
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Sales Forecast</h3>
+            <div style="height: 250px;">
+              <canvas id="salesChart"></canvas>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Revenue Projection</h3>
+            <div style="height: 250px;">
+              <canvas id="revenueChart"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Recommendations -->
+        <div class="mt-8 p-4 bg-yellow-50 rounded-lg">
+          <h3 class="text-lg font-bold text-yellow-800 mb-2">💡 Recommendations</h3>
+          <div id="recommendations" class="text-yellow-700">
+            <p>Run a scenario analysis to get personalized recommendations.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    console.log('Scenario analysis page loaded');
+    const API_BASE = window.location.origin.startsWith('http://localhost:5173')
+      ? 'http://localhost:8000'
+      : '';
+    
+    let salesChart = null;
+    let revenueChart = null;
+
+    async function simulateScenarioAnalysis(data) {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Calculate mock results based on inputs
+      const basePrice = 50; // Mock base price
+      const baseSales = 1000; // Mock base sales
+      
+      // Apply discount effect
+      const discountMultiplier = 1 + (data.discount / 100) * 2; // Discount increases sales
+      
+      // Apply season effect
+      const seasonMultipliers = {
+        'spring': 1.1,
+        'summer': 1.3,
+        'autumn': 1.0,
+        'winter': 0.9,
+        'holiday': 1.5,
+        'back_to_school': 1.2,
+        'current': 1.0
+      };
+      
+      const seasonMultiplier = seasonMultipliers[data.season] || 1.0;
+      
+      // Apply marketing effect
+      const marketingMultipliers = {
+        'none': 1.0,
+        'social_media': 1.15,
+        'email': 1.1,
+        'tv_radio': 1.25,
+        'influencer': 1.2,
+        'combined': 1.4
+      };
+      
+      const marketingMultiplier = marketingMultipliers[data.marketing_campaign] || 1.0;
+      
+      // Calculate results
+      const unitsSold = Math.round(baseSales * discountMultiplier * seasonMultiplier * marketingMultiplier * (data.days / 30));
+      const priceAfterDiscount = basePrice * (1 - data.discount / 100);
+      const predictedSales = unitsSold * priceAfterDiscount;
+      const revenueChange = ((discountMultiplier * seasonMultiplier * marketingMultiplier - 1) * 100);
+      const profitMargin = Math.max(10, 30 - data.discount); // Simplified profit calculation
+      
+      // Update UI
+      document.getElementById('predictedSales').textContent = `₹${predictedSales.toLocaleString()}`;
+      document.getElementById('revenueIncrease').textContent = `${revenueChange >= 0 ? '+' : ''}${revenueChange.toFixed(1)}%`;
+      document.getElementById('unitsSold').textContent = unitsSold.toLocaleString();
+      document.getElementById('profitMargin').textContent = `${profitMargin.toFixed(1)}%`;
+      
+      // Generate recommendations
+      const recommendations = [];
+      
+      if (data.discount > 20) {
+        recommendations.push('💰 High discount may reduce profit margins. Consider bundling products instead.');
+      }
+      
+      if (data.season === 'holiday') {
+        recommendations.push('🎄 Holiday season detected. Increase inventory and marketing spend.');
+      }
+      
+      if (data.marketing_campaign === 'none') {
+        recommendations.push('📢 Consider adding marketing campaigns to boost sales.');
+      }
+      
+      if (revenueChange > 20) {
+        recommendations.push('🚀 Excellent scenario! Consider scaling up operations.');
+      }
+      
+      document.getElementById('recommendations').innerHTML = 
+        recommendations.length > 0 
+          ? recommendations.map(rec => `<p class="mb-2">${rec}</p>`).join('')
+          : '<p>Scenario looks balanced. Monitor performance and adjust as needed.</p>';
+      
+      // Create charts
+      createCharts(data, unitsSold, predictedSales);
+    }
+
+    // Handle scenario form submission
+    document.getElementById('scenarioForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = {
+        product_id: document.getElementById('productSelect').value,
+        store: document.getElementById('storeSelect').value || 'all',
+        days: parseInt(document.getElementById('forecastDays').value),
+        season: document.getElementById('seasonSelect').value,
+        discount: parseFloat(document.getElementById('discountPercent').value),
+        marketing_campaign: document.getElementById('marketingCampaign').value,
+        market_conditions: document.getElementById('marketConditions').value
+      };
+      
+      if (!formData.product_id) {
+        alert('📦 Please select a product first!');
+        return;
+      }
+      
+      console.log('Running scenario with data:', formData);
+      
+      // Show loading state
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '🔄 Analyzing...';
+      
+      try {
+        // Simulate scenario analysis (replace with actual API call)
+        await simulateScenarioAnalysis(formData);
+        
+        // Show results
+        document.getElementById('resultsSection').classList.remove('hidden');
+        document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        
+      } catch (error) {
+        console.error('Scenario analysis error:', error);
+        alert(`❌ Analysis failed: ${error.message}`);
+      } finally {
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
+    });
+
+    // Load products for selection
+    async function loadProducts() {
+      try {
+        console.log('Loading products for scenario analysis...');
+        const response = await fetch(API_BASE + '/api/products/');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Products loaded:', result);
+        
+        const select = document.getElementById('productSelect');
+        
+        if (result.success && result.data && result.data.length > 0) {
+          select.innerHTML = '<option value="">Choose a product...</option>' +
+            '<option value="all">📦 All Products</option>' +
+            result.data.map(p => 
+              `<option value="${p.id}">${p.name} - ₹${parseFloat(p.price).toFixed(2)} (${p.category || 'General'})</option>`
+            ).join('');
+
+        } else {
+          select.innerHTML = '<option value="">📦 No products available</option>';
+        }
+        
+      } catch (error) {
+        console.error('Error loading products:', error);
+        document.getElementById('productSelect').innerHTML = '<option value="">❌ Error loading products</option>';
+      }
+    }
+
+    // Load products on page load
+    function createCharts(data, unitsSold, predictedSales) {
+      // Destroy existing charts
+      if (salesChart) salesChart.destroy();
+      if (revenueChart) revenueChart.destroy();
+      
+      // Generate mock daily data with actual dates and times
+      const days = Array.from({length: Math.min(data.days, 30)}, (_, i) => i + 1);
+      const dailySales = days.map(() => Math.round(unitsSold / data.days * (0.8 + Math.random() * 0.4)));
+      const dailyRevenue = days.map((_, i) => dailySales[i] * 50 * (1 - data.discount / 100));
+      
+      // Generate actual date labels
+      const today = new Date();
+      const dateLabels = days.map(d => {
+        const futureDate = new Date(today);
+        futureDate.setDate(today.getDate() + d);
+        return futureDate.toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: '2-digit'
+        });
+      });
+      
+      // Sales Chart with dates
+      const salesCtx = document.getElementById('salesChart').getContext('2d');
+      salesChart = new Chart(salesCtx, {
+        type: 'line',
+        data: {
+          labels: dateLabels,
+          datasets: [{
+            label: 'Daily Sales (Units)',
+            data: dailySales,
+            borderColor: 'rgb(59, 130, 246)',
+            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+            tension: 0.4,
+            fill: true,
+            borderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            },
+            tooltip: {
+              callbacks: {
+                title: (context) => {
+                  const index = context[0].dataIndex;
+                  const futureDate = new Date(today);
+                  futureDate.setDate(today.getDate() + days[index]);
+                  return futureDate.toLocaleDateString('en-IN', {
+                    weekday: 'short',
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                  });
+                },
+                label: (context) => `Sales: ${context.parsed.y} units`
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                maxRotation: 45,
+                minRotation: 45
+              }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: (value) => value.toFixed(0)
+              }
+            }
+          }
+        }
+      });
+      
+      // Revenue Chart with dates and time
+      const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+      revenueChart = new Chart(revenueCtx, {
+        type: 'bar',
+        data: {
+          labels: dateLabels,
+          datasets: [{
+            label: 'Daily Revenue (₹)',
+            data: dailyRevenue,
+            backgroundColor: 'rgba(34, 197, 94, 0.8)',
+            borderColor: 'rgb(34, 197, 94)',
+            borderWidth: 2,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            },
+            tooltip: {
+              callbacks: {
+                title: (context) => {
+                  const index = context[0].dataIndex;
+                  const futureDate = new Date(today);
+                  futureDate.setDate(today.getDate() + days[index]);
+                  return futureDate.toLocaleDateString('en-IN', {
+                    weekday: 'short',
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                  });
+                },
+                label: (context) => `Revenue: ₹${context.parsed.y.toLocaleString('en-IN', {maximumFractionDigits: 0})}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                maxRotation: 45,
+                minRotation: 45
+              }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: (value) => '₹' + value.toLocaleString('en-IN', {maximumFractionDigits: 0})
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Load stores for selection
+    async function loadStores() {
+      try {
+        console.log('Loading stores for scenario analysis...');
+        const response = await fetch(API_BASE + '/api/admin/store-performance', {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('retail_jwt')
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Stores loaded:', result);
+        
+        const storeSelect = document.getElementById('storeSelect');
+        
+        if (result.success && result.data && result.data.length > 0) {
+          // Keep "All Stores" option
+          storeSelect.innerHTML = '<option value="">All Stores</option>';
+          
+          // Add each store from database
+          result.data.forEach(store => {
+            const option = document.createElement('option');
+            option.value = store.id;
+            option.textContent = `${store.name} - ${store.location}`;
+            storeSelect.appendChild(option);
+          });
+          
+          console.log(`✅ Loaded ${result.data.length} stores successfully`);
+        } else {
+          console.warn('No stores found in database');
+          storeSelect.innerHTML = '<option value="">No Stores Available - Add stores in Product section</option>';
+        }
+      } catch (error) {
+        console.error('Failed to load stores:', error);
+        document.getElementById('storeSelect').innerHTML = '<option value="">Error loading stores</option>';
+      }
+    }
+    
+    // Initialize page
+    loadProducts();
+    loadStores();
+  </script>
+</body>
+</html>

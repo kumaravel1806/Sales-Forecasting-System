@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback Management - Retail Forecasting</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gray-50">
+  <!-- Header -->
+  <header class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <button onclick="history.back()" class="text-blue-600 hover:text-blue-800">
+            <i class="fas fa-arrow-left mr-2"></i>Back
+          </button>
+          <div class="h-8 w-px bg-gray-300"></div>
+          <h1 class="text-2xl font-bold text-blue-700">
+            <i class="fas fa-comments mr-2"></i>Feedback Management
+          </h1>
+        </div>
+        <button onclick="logout()" class="text-red-600 hover:text-red-800">
+          <i class="fas fa-sign-out-alt mr-2"></i>Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-7xl mx-auto p-6 space-y-6">
+    <!-- Analytics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-blue-100 text-sm">Total Feedback</p>
+            <p id="totalFeedback" class="text-3xl font-bold">0</p>
+          </div>
+          <i class="fas fa-comments text-5xl opacity-20"></i>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-green-100 text-sm">Average Rating</p>
+            <p id="avgRating" class="text-3xl font-bold">0.0</p>
+          </div>
+          <i class="fas fa-star text-5xl opacity-20"></i>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-6 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-yellow-100 text-sm">Pending</p>
+            <p id="pendingCount" class="text-3xl font-bold">0</p>
+          </div>
+          <i class="fas fa-clock text-5xl opacity-20"></i>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-purple-100 text-sm">Response Rate</p>
+            <p id="responseRate" class="text-3xl font-bold">0%</p>
+          </div>
+          <i class="fas fa-reply text-5xl opacity-20"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Rating Distribution Chart -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">
+          <i class="fas fa-chart-bar text-blue-600 mr-2"></i>Rating Distribution
+        </h2>
+        <canvas id="ratingChart" height="200"></canvas>
+      </div>
+
+      <!-- Sentiment Analysis Chart -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">
+          <i class="fas fa-chart-pie text-green-600 mr-2"></i>Sentiment Analysis
+        </h2>
+        <canvas id="sentimentChart" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Feedback List -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">
+          <i class="fas fa-list text-blue-600 mr-2"></i>All Feedback
+        </h2>
+        <button onclick="loadFeedback()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+          <i class="fas fa-sync-alt mr-2"></i>Refresh
+        </button>
+      </div>
+      <div id="feedbackList" class="space-y-4"></div>
+    </div>
+  </div>
+
+  <!-- Response Modal -->
+  <div id="responseModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full mx-4">
+      <h3 class="text-2xl font-bold text-gray-800 mb-4">
+        <i class="fas fa-reply text-blue-600 mr-2"></i>Respond to Feedback
+      </h3>
+      <div id="feedbackContent" class="bg-gray-50 p-4 rounded-lg mb-4"></div>
+      <textarea id="responseText" rows="5" placeholder="Type your response here..."
+        class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"></textarea>
+      <div class="flex gap-4 mt-4">
+        <button onclick="submitResponse()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold">
+          <i class="fas fa-paper-plane mr-2"></i>Send Response
+        </button>
+        <button onclick="closeModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold">
+          <i class="fas fa-times mr-2"></i>Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:8000';
+    let currentFeedbackId = null;
+    let ratingChart = null;
+    let sentimentChart = null;
+
+    function getAuthHeaders() {
+      const token = localStorage.getItem('retail_jwt');
+      if (!token) {
+        alert('Please login first');
+        window.location.href = '/login.html';
+        return {};
+      }
+      return {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+    }
+
+    async function loadFeedback() {
+      try {
+        // Load feedback list
+        const response = await fetch(`${API_BASE}/api/feedback/list`, {
+          headers: getAuthHeaders()
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          renderFeedback(result.data);
+        }
+
+        // Load analytics
+        const analyticsResponse = await fetch(`${API_BASE}/api/feedback/analytics`, {
+          headers: getAuthHeaders()
+        });
+        const analyticsResult = await analyticsResponse.json();
+
+        if (analyticsResult.success) {
+          updateAnalytics(analyticsResult.data);
+        }
+      } catch (error) {
+        console.error('Error loading feedback:', error);
+      }
+    }
+
+    function renderFeedback(feedbackList) {
+      const container = document.getElementById('feedbackList');
+      
+      if (feedbackList.length === 0) {
+        container.innerHTML = `
+          <div class="text-center text-gray-400 py-12">
+            <i class="fas fa-inbox text-6xl mb-4"></i>
+            <p class="text-xl">No feedback yet</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = feedbackList.map(fb => {
+        const ratingStars = '⭐'.repeat(fb.rating || 0);
+        const statusColor = fb.status === 'open' ? 'yellow' : fb.status === 'responded' ? 'green' : 'blue';
+        const hasReply = fb.admin_reply && fb.admin_reply.trim();
+        
+        return `
+          <div class="border-2 border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="text-2xl">${ratingStars}</span>
+                  <span class="px-3 py-1 rounded-full text-sm font-semibold bg-${statusColor}-100 text-${statusColor}-800">
+                    ${fb.status}
+                  </span>
+                  <span class="text-sm text-gray-500">
+                    <i class="fas fa-calendar mr-1"></i>${new Date(fb.created_at).toLocaleString('en-IN')}
+                  </span>
+                </div>
+                <p class="text-sm font-semibold text-gray-600 mb-2">
+                  <i class="fas fa-tag mr-1"></i>${fb.category || 'general'}
+                </p>
+                <p class="text-gray-800">${fb.message || 'No message'}</p>
+                
+                ${hasReply ? `
+                  <div class="mt-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                    <p class="text-sm font-semibold text-blue-800 mb-1">
+                      <i class="fas fa-reply mr-2"></i>Admin Response:
+                    </p>
+                    <p class="text-blue-900">${fb.admin_reply}</p>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+            
+            <div class="flex gap-2">
+              <button onclick="openResponseModal(${fb.id}, '${fb.message?.replace(/'/g, "\\'")}', ${fb.rating})" 
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold text-sm">
+                <i class="fas fa-reply mr-2"></i>${hasReply ? 'Edit Response' : 'Respond'}
+              </button>
+              <button onclick="deleteFeedback(${fb.id})" 
+                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold text-sm">
+                <i class="fas fa-trash mr-2"></i>Delete
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateAnalytics(data) {
+      // Update cards
+      document.getElementById('totalFeedback').textContent = data.overview.total_feedback;
+      document.getElementById('avgRating').textContent = data.overview.avg_rating.toFixed(1) + ' ⭐';
+      document.getElementById('pendingCount').textContent = data.status_breakdown.open || 0;
+      document.getElementById('responseRate').textContent = data.overview.response_rate + '%';
+
+      // Update rating distribution chart
+      const ratingCtx = document.getElementById('ratingChart');
+      if (ratingChart) ratingChart.destroy();
+      
+      ratingChart = new Chart(ratingCtx, {
+        type: 'bar',
+        data: {
+          labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
+          datasets: [{
+            label: 'Number of Ratings',
+            data: [
+              data.rating_distribution[1],
+              data.rating_distribution[2],
+              data.rating_distribution[3],
+              data.rating_distribution[4],
+              data.rating_distribution[5]
+            ],
+            backgroundColor: [
+              'rgba(239, 68, 68, 0.8)',
+              'rgba(251, 146, 60, 0.8)',
+              'rgba(250, 204, 21, 0.8)',
+              'rgba(132, 204, 22, 0.8)',
+              'rgba(34, 197, 94, 0.8)'
+            ],
+            borderColor: [
+              'rgb(239, 68, 68)',
+              'rgb(251, 146, 60)',
+              'rgb(250, 204, 21)',
+              'rgb(132, 204, 22)',
+              'rgb(34, 197, 94)'
+            ],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { 
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          }
+        }
+      });
+
+      // Update sentiment chart
+      const sentimentCtx = document.getElementById('sentimentChart');
+      if (sentimentChart) sentimentChart.destroy();
+      
+      sentimentChart = new Chart(sentimentCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Positive (4-5★)', 'Neutral (3★)', 'Negative (1-2★)'],
+          datasets: [{
+            data: [
+              data.sentiment.positive,
+              data.sentiment.neutral,
+              data.sentiment.negative
+            ],
+            backgroundColor: [
+              'rgba(34, 197, 94, 0.8)',
+              'rgba(250, 204, 21, 0.8)',
+              'rgba(239, 68, 68, 0.8)'
+            ],
+            borderColor: [
+              'rgb(34, 197, 94)',
+              'rgb(250, 204, 21)',
+              'rgb(239, 68, 68)'
+            ],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }
+
+    function openResponseModal(feedbackId, message, rating) {
+      currentFeedbackId = feedbackId;
+      document.getElementById('feedbackContent').innerHTML = `
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-2xl">${'⭐'.repeat(rating || 0)}</span>
+          <span class="text-sm text-gray-600">Feedback ID: ${feedbackId}</span>
+        </div>
+        <p class="text-gray-800">${message}</p>
+      `;
+      document.getElementById('responseText').value = '';
+      document.getElementById('responseModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('responseModal').classList.add('hidden');
+      currentFeedbackId = null;
+    }
+
+    async function submitResponse() {
+      const responseText = document.getElementById('responseText').value.trim();
+      
+      if (!responseText) {
+        alert('Please enter a response');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/api/admin/feedback/${currentFeedbackId}/respond`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ admin_reply: responseText })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          alert('Response sent successfully!');
+          closeModal();
+          loadFeedback();
+        } else {
+          alert('Failed to send response: ' + (result.meta?.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error sending response:', error);
+        alert('Error sending response');
+      }
+    }
+
+    async function deleteFeedback(feedbackId) {
+      if (!confirm('Are you sure you want to delete this feedback?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/api/admin/feedback/${feedbackId}/delete`, {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          alert('Feedback deleted successfully!');
+          loadFeedback();
+        } else {
+          alert('Failed to delete feedback: ' + (result.meta?.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error deleting feedback:', error);
+        alert('Error deleting feedback');
+      }
+    }
+
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('retail_jwt');
+        localStorage.removeItem('user_data');
+        window.location.href = '/login.html';
+      }
+    }
+
+    // Load feedback on page load
+    loadFeedback();
+  </script>
+</body>
+</html>

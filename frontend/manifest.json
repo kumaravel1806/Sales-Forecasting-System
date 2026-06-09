@@ -1,0 +1,9 @@
+{
+  "name": "Retail ML App",
+  "short_name": "RetailML",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#0ea5e9",
+  "icons": []
+}

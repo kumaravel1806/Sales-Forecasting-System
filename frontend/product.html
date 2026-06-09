@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Product Reviews & Q&A</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="max-w-3xl mx-auto p-4">
+    <header class="py-6 flex items-center justify-between">
+      <div>
+        <a href="/" class="text-sky-600 text-sm">← Home</a>
+        <h1 class="text-2xl font-bold text-sky-700 mt-2">Product Reviews & Q&A</h1>
+      </div>
+    </header>
+
+    <main class="space-y-6">
+      <section class="p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-2">Select Product</h2>
+        <form id="prodSel" class="flex gap-2">
+          <input class="border rounded p-2" name="product_id" placeholder="Product ID" type="number" required />
+          <button class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded">Load</button>
+        </form>
+        <div id="selMsg" class="text-sm mt-2"></div>
+      </section>
+
+      <section class="p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-2">Submit Review</h2>
+        <form id="revForm" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+          <input name="username" placeholder="Your name" class="border rounded p-2" />
+          <input name="rating" placeholder="Rating 1-5" type="number" min="1" max="5" class="border rounded p-2" required />
+          <input type="file" name="photo" accept="image/*" class="border rounded p-2" />
+          <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded">Post</button>
+          <textarea name="text" class="md:col-span-4 border rounded p-2 h-24" placeholder="Write your review..."></textarea>
+        </form>
+        <div id="revMsg" class="text-sm mt-2"></div>
+      </section>
+
+      <section class="p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-2">Ask a Question</h2>
+        <form id="qaForm" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+          <input name="username" placeholder="Your name" class="border rounded p-2" />
+          <button class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded">Ask</button>
+          <textarea name="question" class="md:col-span-4 border rounded p-2 h-24" placeholder="Type your question..."></textarea>
+        </form>
+        <div id="qaMsg" class="text-sm mt-2"></div>
+      </section>
+
+      <section class="p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-2">Reviews</h2>
+        <ul id="reviews" class="space-y-2"></ul>
+      </section>
+
+      <section class="p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-2">Q&A</h2>
+        <ul id="qas" class="space-y-2"></ul>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = location.origin.startsWith('http://localhost:5173') ? 'http://localhost:8000' : '';
+    let currentProductId = null;
+
+    async function loadLists() {
+      if (!currentProductId) return;
+      const r1 = await fetch(`${API_BASE}/api/reviews/list?product_id=${currentProductId}`).then(r => r.json());
+      const r2 = await fetch(`${API_BASE}/api/qa/list?product_id=${currentProductId}`).then(r => r.json());
+      const ul1 = document.getElementById('reviews');
+      ul1.innerHTML = '';
+      (r1.data||[]).forEach(x => {
+        const li = document.createElement('li');
+        li.className = 'p-3 border rounded';
+        li.textContent = `${x.username||'Anon'} • ${x.rating}/5 • ${x.text||''}`;
+        ul1.appendChild(li);
+      });
+      const ul2 = document.getElementById('qas');
+      ul2.innerHTML = '';
+      (r2.data||[]).forEach(x => {
+        const li = document.createElement('li');
+        li.className = 'p-3 border rounded';
+        li.textContent = `${x.username||'Anon'}: ${x.question} ${x.answer?('• Answer: '+x.answer):''}`;
+        ul2.appendChild(li);
+      });
+    }
+
+    document.getElementById('prodSel').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      currentProductId = Number(fd.get('product_id'));
+      document.getElementById('selMsg').textContent = `Selected product ${currentProductId}`;
+      await loadLists();
+    });
+
+    document.getElementById('revForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentProductId) { document.getElementById('revMsg').textContent = 'Select product first'; return; }
+      const fd = new FormData(e.target);
+      fd.set('product_id', String(currentProductId));
+      const res = await fetch(`${API_BASE}/api/reviews/submit`, { method: 'POST', body: fd });
+      const j = await res.json();
+      document.getElementById('revMsg').textContent = j.success ? 'Review posted' : `Error: ${j.meta?.error}`;
+      e.target.reset();
+      await loadLists();
+    });
+
+    document.getElementById('qaForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentProductId) { document.getElementById('qaMsg').textContent = 'Select product first'; return; }
+      const fd = new FormData(e.target);
+      const body = { product_id: currentProductId, username: fd.get('username'), question: fd.get('question') };
+      const j = await fetch(`${API_BASE}/api/qa/ask`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json());
+      document.getElementById('qaMsg').textContent = j.success ? 'Question posted' : `Error: ${j.meta?.error}`;
+      e.target.reset();
+      await loadLists();
+    });
+  </script>
+</body>
+</html>

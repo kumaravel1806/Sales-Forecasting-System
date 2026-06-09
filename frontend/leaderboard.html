@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Model Leaderboard</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="max-w-5xl mx-auto p-4">
+    <header class="py-6 flex items-center justify-between">
+      <div>
+        <a href="/" class="text-sky-600 text-sm">← Home</a>
+        <h1 class="text-2xl font-bold text-sky-700 mt-2">Model Leaderboard</h1>
+        <p class="text-sm text-slate-600">Saved pipeline/scenario runs with overall metrics</p>
+      </div>
+      <a href="/scenario.html" class="text-sm text-slate-600 underline">Scenario & Pipeline</a>
+    </header>
+
+    <main class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <section class="p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-2">Saved Runs</h2>
+        <div id="runs" class="space-y-2"></div>
+      </section>
+      <section class="p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-2">Run Detail</h2>
+        <div id="detail" class="text-sm text-slate-700">Select a run to view details.</div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = location.origin.startsWith('http://localhost:5173') ? 'http://localhost:8000' : '';
+
+    function fmt(n){ return (n===null || n===undefined) ? 'NA' : (typeof n==='number'? n.toFixed(4) : n); }
+
+    async function loadRuns(){
+      const res = await fetch(API_BASE + '/api/ml/runs');
+      const j = await res.json();
+      const box = document.getElementById('runs');
+      box.innerHTML='';
+      (j.data||[]).forEach(run => {
+        const card = document.createElement('div');
+        card.className = 'p-3 border rounded hover:bg-slate-50 cursor-pointer';
+        const overall = run.result?.overall || {};
+        const lr = overall.lr || {}; const xgb = overall.xgb || {};
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="font-semibold">${run.name || 'Run #' + run.id}</div>
+              <div class="text-xs text-slate-500">${new Date(run.created_at).toLocaleString()} · horizon ${run.horizon ?? '-'} · model ${run.model}</div>
+            </div>
+            <div class="text-xs">
+              <div>LR MAE ${fmt(lr.mae)} RMSE ${fmt(lr.rmse)} MAPE ${fmt(lr.mape)} R2 ${fmt(lr.r2)}</div>
+              <div>XGB MAE ${fmt(xgb.mae)} RMSE ${fmt(xgb.rmse)} MAPE ${fmt(xgb.mape)} R2 ${fmt(xgb.r2)}</div>
+            </div>
+          </div>`;
+        card.addEventListener('click', () => showDetail(run));
+        box.appendChild(card);
+      });
+    }
+
+    function showDetail(run){
+      const d = document.getElementById('detail');
+      d.textContent = '';
+      const pre = document.createElement('pre');
+      pre.className = 'bg-slate-100 p-2 rounded overflow-auto max-h-[70vh]';
+      pre.textContent = JSON.stringify(run, null, 2);
+      d.appendChild(pre);
+    }
+
+    loadRuns();
+  </script>
+</body>
+</html>

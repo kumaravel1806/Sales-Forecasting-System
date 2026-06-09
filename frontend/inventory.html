@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventory & FEFO</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="max-w-3xl mx-auto p-4">
+    <header class="py-6 flex items-center justify-between">
+      <div>
+        <a href="/" class="text-sky-600 text-sm">← Home</a>
+        <h1 class="text-2xl font-bold text-sky-700 mt-2">Inventory & FEFO</h1>
+        <p class="text-sm text-slate-600">Add products and batches; view FEFO picklist and near-expiry</p>
+      </div>
+    </header>
+
+    <main class="space-y-4">
+      <section class="p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-2">Create Product</h2>
+        <form id="prodForm" class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+          <input name="name" placeholder="Name" class="border rounded p-2" required />
+          <input name="price" placeholder="Price" type="number" step="0.01" class="border rounded p-2" required />
+          <button class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded">Add</button>
+        </form>
+        <div id="prodMsg" class="text-sm mt-2"></div>
+      </section>
+
+      <section class="p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-2">Add Batch</h2>
+        <form id="batchForm" class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+          <input name="product_id" placeholder="Product ID" type="number" class="border rounded p-2" required />
+          <input name="batch_no" placeholder="Batch No" class="border rounded p-2" required />
+          <input name="import_date" placeholder="Import (YYYY-MM-DD)" class="border rounded p-2" required />
+          <input name="expiry_date" placeholder="Expiry (YYYY-MM-DD)" class="border rounded p-2" required />
+          <input name="qty" placeholder="Qty" type="number" class="border rounded p-2" required />
+          <button class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded">Add</button>
+        </form>
+        <div id="batchMsg" class="text-sm mt-2"></div>
+      </section>
+
+      <section class="p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-2">FEFO Picklist</h2>
+        <form id="fefoForm" class="flex gap-2 items-end mb-3">
+          <input name="product_id" placeholder="Product ID (optional)" type="number" class="border rounded p-2" />
+          <button class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded">Load</button>
+        </form>
+        <ul id="fefoList" class="space-y-2"></ul>
+      </section>
+
+      <section class="p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-2">Near Expiry</h2>
+        <form id="nearForm" class="flex gap-2 items-end mb-3">
+          <input name="days" placeholder="Days" type="number" class="border rounded p-2" value="7" />
+          <button class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded">Check</button>
+        </form>
+        <ul id="nearList" class="space-y-2"></ul>
+      </section>
+
+      <section class="p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-2">Expired Performance</h2>
+        <form id="expPerfForm" class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end mb-3">
+          <input name="days" placeholder="Lookback days" type="number" class="border rounded p-2" value="30" />
+          <input name="good_threshold" placeholder="Good threshold (avg/day)" type="number" step="0.1" class="border rounded p-2" value="5" />
+          <input name="excellent_threshold" placeholder="Excellent threshold (avg/day)" type="number" step="0.1" class="border rounded p-2" value="10" />
+          <label class="text-sm flex items-center gap-2"><input type="checkbox" name="include_zero" checked /> Include zero-sales</label>
+          <button class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded">Load</button>
+        </form>
+        <ul id="expPerfList" class="space-y-2"></ul>
+      </section>
+
+      <section class="p-4 bg-white rounded-lg shadow">
+        <h2 class="font-semibold mb-2">Send Notifications</h2>
+        <form id="notifyForm" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+          <input name="email" placeholder="Email" class="border rounded p-2" />
+          <input name="phone" placeholder="Phone" class="border rounded p-2" />
+          <input name="days" placeholder="Days" type="number" class="border rounded p-2" value="7" />
+          <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded">Send</button>
+        </form>
+        <div id="notifyMsg" class="text-sm mt-2"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = location.origin.startsWith('http://localhost:5173') ? 'http://localhost:8000' : '';
+    const jpost = (url, body) => fetch(API_BASE + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body||{}) }).then(r => r.json());
+
+    document.getElementById('prodForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const j = await jpost('/api/inventory/products', { name: fd.get('name'), price: Number(fd.get('price')) });
+      document.getElementById('prodMsg').textContent = j.success ? `Product created ID ${j.data.id}` : `Error: ${j.meta?.error}`;
+      e.target.reset();
+    });
+
+    document.getElementById('batchForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = Object.fromEntries(fd.entries());
+      body.product_id = Number(body.product_id); body.qty = Number(body.qty);
+      const j = await jpost('/api/inventory/batches', body);
+      document.getElementById('batchMsg').textContent = j.success ? `Batch created ID ${j.data.id}` : `Error: ${j.meta?.error}`;
+      e.target.reset();
+    });
+
+    document.getElementById('fefoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const pid = fd.get('product_id');
+      const url = pid ? `${API_BASE}/api/inventory/fefo_picklist?product_id=${encodeURIComponent(pid)}` : `${API_BASE}/api/inventory/fefo_picklist`;
+      const j = await fetch(url).then(r => r.json());
+      const ul = document.getElementById('fefoList');
+      ul.innerHTML = '';
+      (j.data||[]).forEach(b => {
+        const li = document.createElement('li');
+        li.className = 'p-3 border rounded';
+        li.textContent = `Batch ${b.batch_no} • Expiry ${b.expiry_date} • Qty ${b.qty}`;
+        ul.appendChild(li);
+      });
+    });
+
+    document.getElementById('nearForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const days = fd.get('days') || 7;
+      const j = await fetch(`${API_BASE}/api/inventory/near_expiry?days=${encodeURIComponent(days)}`).then(r => r.json());
+      const ul = document.getElementById('nearList');
+      ul.innerHTML = '';
+      (j.data||[]).forEach(b => {
+        const li = document.createElement('li');
+        li.className = 'p-3 border rounded';
+        li.textContent = `PID ${b.product_id} • Batch ${b.batch_no} • Expiry ${b.expiry_date} • in ${b.days_to_expiry} days • ${b.status}`;
+        ul.appendChild(li);
+      });
+    });
+
+    document.getElementById('notifyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = Object.fromEntries(fd.entries());
+      const j = await jpost('/api/inventory/notify', body);
+      document.getElementById('notifyMsg').textContent = j.success ? `Email: ${j.data.email_sent}, SMS: ${j.data.sms_sent}` : `Error: ${j.meta?.error}`;
+    });
+
+    document.getElementById('expPerfForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const params = new URLSearchParams();
+      params.set('days', fd.get('days')||'30');
+      params.set('good_threshold', fd.get('good_threshold')||'5');
+      params.set('excellent_threshold', fd.get('excellent_threshold')||'10');
+      params.set('include_zero', (fd.get('include_zero') ? 'true' : 'false'));
+      const j = await fetch(`${API_BASE}/api/inventory/expired_performance?${params.toString()}`).then(r=>r.json());
+      const ul = document.getElementById('expPerfList');
+      ul.innerHTML = '';
+      (j.data||[]).forEach(it => {
+        const li = document.createElement('li');
+        li.className = 'p-3 border rounded flex items-center justify-between';
+        const color = it.performance==='excellent' ? 'text-emerald-700' : (it.performance==='good' ? 'text-amber-700' : 'text-rose-700');
+        li.innerHTML = `
+          <div>
+            <div class="font-semibold">${it.product_name || 'PID '+it.product_id} <span class="text-xs text-slate-500">Batch ${it.batch_no}</span></div>
+            <div class="text-xs text-slate-600">Expired on ${it.expiry_date} • Qty remaining ${it.qty_remaining}</div>
+          </div>
+          <div class="text-right">
+            <div class="${color} font-semibold capitalize">${it.performance}</div>
+            <div class="text-xs text-slate-500">${it.sales_last_days} sold in last ${j.meta?.days ?? ''} days • avg/day ${it.avg_daily?.toFixed ? it.avg_daily.toFixed(2) : it.avg_daily}</div>
+          </div>
+        `;
+        ul.appendChild(li);
+      });
+    });
+  </script>
+</body>
+</html>

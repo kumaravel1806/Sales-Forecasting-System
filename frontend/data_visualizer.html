@@ -1,0 +1,560 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Historical Sales Analysis</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f3f4f6;
+        color: #111827;
+      }
+      .page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px 16px 40px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 24px;
+      }
+      p.subtitle {
+        margin: 0 0 24px;
+        font-size: 14px;
+        color: #6b7280;
+      }
+      .panel {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 16px 20px 20px;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+        border: 1px solid #e5e7eb;
+      }
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .panel-title {
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .panel-caption {
+        font-size: 12px;
+        color: #6b7280;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+      }
+      label { color: #4b5563; }
+      select {
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        background: #ffffff;
+        font-size: 12px;
+      }
+      button {
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: none;
+        background: #2563eb;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:hover { background: #1d4ed8; }
+      .chart-wrapper {
+        margin-top: 12px;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        padding: 8px;
+        height: 260px;
+      }
+      #chartCanvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      #message {
+        margin-top: 8px;
+        font-size: 11px;
+        color: #6b7280;
+      }
+      .status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 12px;
+        background: #f9fafb;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 8px;
+        font-size: 11px;
+        color: #6b7280;
+      }
+      .status-bar span {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      #pauseBtn {
+        background: #f59e0b;
+      }
+      #pauseBtn:hover {
+        background: #d97706;
+      }
+      #pauseBtn.paused {
+        background: #10b981;
+      }
+      #pauseBtn.paused:hover {
+        background: #059669;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h1>Historical Sales Analysis</h1>
+      <p class="subtitle">Real-time sales data with automatic updates.</p>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Sales Trend</div>
+            <div class="panel-caption">View sales over time with real-time data.</div>
+          </div>
+          <div class="controls">
+            <label for="period">Period</label>
+            <select id="period">
+              <option value="48h">Last 48 Hours</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="60d">Last 60 Days</option>
+              <option value="365d">Last 365 Days</option>
+            </select>
+            <label for="metric">Metric</label>
+            <select id="metric">
+              <option value="amount">Sales Amount</option>
+              <option value="ratio">Sales Ratio</option>
+            </select>
+            <label for="autoRefresh">Auto Refresh</label>
+            <select id="autoRefresh">
+              <option value="off">Off</option>
+              <option value="30s">30 seconds</option>
+              <option value="60s" selected>1 minute</option>
+              <option value="300s">5 minutes</option>
+            </select>
+            <button id="generateBtn">Generate Chart</button>
+            <button id="pauseBtn">Pause</button>
+          </div>
+        </div>
+
+        <div class="status-bar">
+          <span id="connectionStatus" style="color: #10b981;">🟢 Connected</span>
+          <span id="lastUpdate">Last update: Never</span>
+          <span id="dataSource">Data source: Sample</span>
+        </div>
+
+        <div class="chart-wrapper">
+          <canvas id="chartCanvas"></canvas>
+        </div>
+        <div id="message">Loading data automatically...</div>
+      </div>
+    </div>
+
+    <script>
+      const periodSelect = document.getElementById('period');
+      const metricSelect = document.getElementById('metric');
+      const autoRefreshSelect = document.getElementById('autoRefresh');
+      const generateBtn = document.getElementById('generateBtn');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const canvas = document.getElementById('chartCanvas');
+      const messageEl = document.getElementById('message');
+      const connectionStatusEl = document.getElementById('connectionStatus');
+      const lastUpdateEl = document.getElementById('lastUpdate');
+      const dataSourceEl = document.getElementById('dataSource');
+
+      // Real-time state management
+      let autoRefreshInterval = null;
+      let isPaused = false;
+      let socket = null;
+      let currentSeries = null;
+      let lastUpdateTime = null;
+
+      // Initialize the application
+      function init() {
+        // Load initial data
+        loadChartData();
+        
+        // Setup WebSocket connection
+        setupWebSocket();
+        
+        // Setup auto-refresh
+        setupAutoRefresh();
+        
+        // Setup event listeners
+        setupEventListeners();
+      }
+
+      // WebSocket connection for real-time updates
+      function setupWebSocket() {
+        try {
+          // Try to connect to the real-time server
+          socket = new WebSocket('ws://localhost:5001');
+          
+          socket.onopen = () => {
+            updateConnectionStatus('🟢 Connected', true);
+            console.log('WebSocket connected');
+          };
+          
+          socket.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              if (data.type === 'sales_update') {
+                // Refresh chart with new data when sales update is received
+                if (!isPaused) {
+                  console.log('Sales update received, refreshing chart...');
+                  loadChartData();
+                }
+              }
+            } catch (err) {
+              console.error('Error parsing WebSocket message:', err);
+            }
+          };
+          
+          socket.onclose = () => {
+            updateConnectionStatus('🔴 Disconnected', false);
+            console.log('WebSocket disconnected');
+            // Try to reconnect after 5 seconds
+            setTimeout(setupWebSocket, 5000);
+          };
+          
+          socket.onerror = (error) => {
+            updateConnectionStatus('🟡 Connection Error', false);
+            console.error('WebSocket error:', error);
+          };
+        } catch (err) {
+          updateConnectionStatus('🔴 WebSocket Unavailable', false);
+          console.log('WebSocket not available, falling back to HTTP polling');
+        }
+      }
+
+      // Update connection status display
+      function updateConnectionStatus(status, isConnected) {
+        connectionStatusEl.textContent = status;
+        if (isConnected) {
+          connectionStatusEl.style.color = '#10b981';
+        } else {
+          connectionStatusEl.style.color = '#ef4444';
+        }
+      }
+
+      // Setup auto-refresh functionality
+      function setupAutoRefresh() {
+        function updateAutoRefresh() {
+          const interval = autoRefreshSelect.value;
+          
+          // Clear existing interval
+          if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+            autoRefreshInterval = null;
+          }
+          
+          // Set new interval if not 'off'
+          if (interval !== 'off' && !isPaused) {
+            const intervalMs = parseInt(interval.replace('s', '')) * 1000;
+            autoRefreshInterval = setInterval(() => {
+              if (!isPaused) {
+                loadChartData();
+              }
+            }, intervalMs);
+          }
+        }
+        
+        autoRefreshSelect.addEventListener('change', updateAutoRefresh);
+        updateAutoRefresh(); // Initialize
+      }
+
+      // Setup event listeners
+      function setupEventListeners() {
+        // Generate button
+        generateBtn.addEventListener('click', () => {
+          loadChartData();
+        });
+        
+        // Pause/Resume button
+        pauseBtn.addEventListener('click', () => {
+          isPaused = !isPaused;
+          pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
+          pauseBtn.classList.toggle('paused');
+          
+          if (!isPaused) {
+            // Resume auto-refresh
+            setupAutoRefresh();
+            loadChartData();
+          } else {
+            // Clear auto-refresh interval
+            if (autoRefreshInterval) {
+              clearInterval(autoRefreshInterval);
+              autoRefreshInterval = null;
+            }
+          }
+        });
+        
+        // Period and metric changes
+        periodSelect.addEventListener('change', () => {
+          if (!isPaused) {
+            loadChartData();
+          }
+        });
+        
+        metricSelect.addEventListener('change', () => {
+          if (currentSeries) {
+            drawLineChart(currentSeries, metricSelect.value);
+            const result = classifySales(currentSeries, metricSelect.value);
+            messageEl.textContent = `Sales quality: ${result.label} - ${result.explanation}`;
+          }
+        });
+      }
+
+      // Load chart data (main function)
+      async function loadChartData() {
+        const period = periodSelect.value || '48h';
+        const metric = metricSelect.value || 'amount';
+        
+        try {
+          messageEl.textContent = 'Loading data...';
+          
+          // Try to fetch real data first
+          let series = await fetchRealSeries(period);
+          
+          if (series) {
+            currentSeries = series;
+            dataSourceEl.textContent = 'Data source: Live';
+            dataSourceEl.style.color = '#10b981';
+          } else {
+            // Fallback to sample data
+            series = buildSampleSeries(period);
+            currentSeries = series;
+            dataSourceEl.textContent = 'Data source: Sample';
+            dataSourceEl.style.color = '#f59e0b';
+          }
+          
+          // Draw the chart
+          drawLineChart(series, metric);
+          
+          // Update last update time
+          lastUpdateTime = new Date();
+          lastUpdateEl.textContent = `Last update: ${lastUpdateTime.toLocaleTimeString()}`;
+          
+          // Classify sales
+          const result = classifySales(series, metric);
+          messageEl.textContent = `Sales quality: ${result.label} - ${result.explanation}`;
+          
+        } catch (err) {
+          console.error('Error loading chart data:', err);
+          messageEl.textContent = 'Error loading data. Please try again.';
+        }
+      }
+
+      function buildSampleSeries(period) {
+        const points = [];
+        const labels = [];
+        let count;
+        const p = (period || '48h').toLowerCase();
+
+        if (p === '30d') {
+          count = 30;
+        } else if (p === '60d') {
+          count = 60;
+        } else if (p === '365d') {
+          count = 12; // months
+        } else {
+          count = 24; // 48h -> 24 points
+        }
+
+        let base = 100;
+        for (let i = 0; i < count; i++) {
+          base += (Math.random() - 0.5) * 15;
+          const value = Math.max(10, Math.round(base));
+          points.push(value);
+          labels.push((i + 1).toString());
+        }
+
+        const max = Math.max(...points) || 1;
+        const ratios = points.map(v => v / max);
+        return { labels, values: points, ratios };
+      }
+
+      async function fetchRealSeries(period) {
+        try {
+          const token = localStorage.getItem('retail_jwt');
+          if (!token) {
+            console.warn('No auth token found, redirecting to login');
+            window.location.href = '/login.html';
+            return null;
+          }
+
+          const resp = await fetch(`/api/admin/historical-sales?period=${encodeURIComponent(period)}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            }
+          });
+
+          if (!resp.ok) {
+            if (resp.status === 401 || resp.status === 403) {
+              console.warn('Auth failed for historical-sales, redirecting to login');
+              window.location.href = '/login.html';
+              return null;
+            }
+            throw new Error(`HTTP ${resp.status}`);
+          }
+
+          const payload = await resp.json();
+          if (!payload.success || !payload.data || !payload.data.time_series) {
+            throw new Error('No time_series returned from API');
+          }
+
+          const ts = payload.data.time_series;
+          const labels = ts.dates || [];
+          const values = ts.values || [];
+          const ratios = (ts.ratios && ts.ratios.length === labels.length)
+            ? ts.ratios
+            : (values.length ? values.map(v => v / Math.max(...values)) : []);
+
+          if (!labels.length || !values.length) {
+            throw new Error('Empty time_series from API');
+          }
+
+          return { labels, values, ratios };
+        } catch (err) {
+          console.error('Error fetching real series:', err);
+          return null;
+        }
+      }
+
+      function drawLineChart(series, metric) {
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const labels = series.labels;
+        const values = metric === 'ratio' ? series.ratios : series.values;
+        if (!labels.length || !values.length) return;
+
+        const width = canvas.parentElement.clientWidth || 600;
+        const height = canvas.parentElement.clientHeight || 240;
+        canvas.width = width;
+        canvas.height = height;
+
+        ctx.clearRect(0, 0, width, height);
+
+        const paddingLeft = 40;
+        const paddingRight = 10;
+        const paddingTop = 15;
+        const paddingBottom = 30;
+
+        const plotLeft = paddingLeft;
+        const plotRight = width - paddingRight;
+        const plotTop = paddingTop;
+        const plotBottom = height - paddingBottom;
+
+        const minVal = Math.min(...values);
+        const maxVal = Math.max(...values);
+        const range = (maxVal - minVal) || 1;
+
+        ctx.strokeStyle = '#d1d5db';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(plotLeft, plotTop);
+        ctx.lineTo(plotLeft, plotBottom);
+        ctx.lineTo(plotRight, plotBottom);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#2563eb';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        values.forEach((v, i) => {
+          const t = values.length > 1 ? i / (values.length - 1) : 0.5;
+          const x = plotLeft + t * (plotRight - plotLeft);
+          const norm = (v - minVal) / range;
+          const y = plotBottom - norm * (plotBottom - plotTop);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        ctx.fillStyle = '#1d4ed8';
+        values.forEach((v, i) => {
+          const t = values.length > 1 ? i / (values.length - 1) : 0.5;
+          const x = plotLeft + t * (plotRight - plotLeft);
+          const norm = (v - minVal) / range;
+          const y = plotBottom - norm * (plotBottom - plotTop);
+          ctx.beginPath();
+          ctx.arc(x, y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '10px system-ui';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(maxVal.toFixed(metric === 'ratio' ? 2 : 0), paddingLeft - 4, plotTop);
+        ctx.fillText(minVal.toFixed(metric === 'ratio' ? 2 : 0), paddingLeft - 4, plotBottom);
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(labels[0], plotLeft, plotBottom + 4);
+        ctx.fillText(labels[labels.length - 1], plotRight, plotBottom + 4);
+      }
+
+      function classifySales(series, metric) {
+        const values = (metric === 'ratio' ? series.ratios : series.values) || [];
+        if (!values.length) {
+          return { label: 'Fine', explanation: 'Not enough data to evaluate sales trend.' };
+        }
+
+        const first = values[0];
+        const last = values[values.length - 1];
+        const max = Math.max(...values);
+        const min = Math.min(...values);
+        const sum = values.reduce((s, v) => s + v, 0);
+        const avg = sum / values.length;
+        const safeBase = Math.abs(first) > 1 ? Math.abs(first) : 1;
+        const trend = (last - first) / safeBase;
+        const spread = (max - min) / (Math.abs(avg) > 1 ? Math.abs(avg) : 1);
+
+        if (trend > 0.2 && avg >= first && spread <= 1.0) {
+          return {
+            label: 'Good',
+            explanation: 'Sales are trending up with relatively stable variation.'
+          };
+        }
+
+        if (trend < -0.2 || avg < first * 0.8) {
+          return {
+            label: 'Bad',
+            explanation: 'Sales are declining or staying at a persistently low level.'
+          };
+        }
+
+        return {
+          label: 'Fine',
+          explanation: 'Sales are relatively stable without a strong upward or downward trend.'
+        };
+      }
+
+      // Initialize the application when DOM is ready
+      document.addEventListener('DOMContentLoaded', init);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shop - Simple Version</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="max-w-6xl mx-auto p-4">
+    <header class="py-6">
+      <div class="flex gap-4 text-sm mb-4">
+        <button onclick="history.back()" class="text-sky-600 hover:text-sky-800">← Back</button>
+        <a href="/" class="text-sky-600 hover:text-sky-800">🏠 Home</a>
+        <button onclick="localStorage.removeItem('retail_jwt'); location.href='/login.html'" class="text-red-600 hover:text-red-800">Logout</button>
+      </div>
+      <h1 class="text-3xl font-bold text-sky-700">🛒 Shop</h1>
+      <p class="text-slate-600">Browse and buy products</p>
+    </header>
+
+    <main>
+      <!-- Products Section -->
+      <section class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold">Products</h2>
+          <div class="flex items-center gap-4">
+            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+              Cart: <span id="cartCount">0</span> items
+            </span>
+            <button onclick="toggleCart()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+              View Cart
+            </button>
+          </div>
+        </div>
+        
+        <div id="products" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div class="col-span-full text-center py-12">
+            <div class="text-6xl mb-4">🔄</div>
+            <h3 class="text-xl font-bold mb-2">Loading Products...</h3>
+            <p class="text-gray-600">Please wait</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cart Section -->
+      <section id="cartSection" class="hidden mt-6 bg-white rounded-lg shadow p-6">
+        <h2 class="text-2xl font-bold mb-4">Shopping Cart</h2>
+        <div id="cartItems">
+          <div class="text-center text-gray-500 py-4">Cart is empty</div>
+        </div>
+        <div class="border-t pt-4 mt-4">
+          <div class="flex justify-between items-center">
+            <span class="text-xl font-bold">Total: ₹<span id="cartTotal">0.00</span></span>
+            <div class="space-x-2">
+              <button onclick="clearCart()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                Clear Cart
+              </button>
+              <button onclick="checkout()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-medium">
+                Checkout
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    console.log('Simple shop page loaded');
+    
+    let cart = JSON.parse(localStorage.getItem('shopping_cart') || '[]');
+    
+    // Load products function
+    async function loadProducts() {
+      console.log('=== LOADING PRODUCTS ===');
+      
+      try {
+        const productsContainer = document.getElementById('products');
+        
+        // Show loading
+        productsContainer.innerHTML = `
+          <div class="col-span-full text-center py-12">
+            <div class="text-6xl mb-4">🔄</div>
+            <h3 class="text-xl font-bold mb-2">Loading Products...</h3>
+            <p class="text-gray-600">Fetching from API...</p>
+          </div>
+        `;
+        
+        console.log('Fetching products from API...');
+        const response = await fetch('/api/products/');
+        console.log('API Response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('API Result:', result);
+        
+        if (result.success && result.data && result.data.length > 0) {
+          console.log(`Found ${result.data.length} products`);
+          
+          // Display products
+          productsContainer.innerHTML = result.data.map(product => `
+            <div class="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
+              <div class="bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg h-32 mb-4 flex items-center justify-center">
+                <span class="text-4xl">${getCategoryIcon(product.category)}</span>
+              </div>
+              <h3 class="font-bold text-lg mb-2">${product.name}</h3>
+              <p class="text-sm text-gray-600 mb-1">Category: ${product.category}</p>
+              <p class="text-sm text-gray-500 mb-3">SKU: ${product.sku || 'N/A'}</p>
+              <div class="flex items-center justify-between">
+                <span class="text-2xl font-bold text-green-600">₹${parseFloat(product.price || 0).toFixed(2)}</span>
+                <button 
+                  onclick="addToCart(${product.id}, '${product.name.replace(/'/g, "\\'")}', ${product.price || 0})"
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded font-medium"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          `).join('');
+          
+          console.log('Products displayed successfully!');
+        } else {
+          console.log('No products found');
+          productsContainer.innerHTML = `
+            <div class="col-span-full text-center py-12">
+              <div class="text-6xl mb-4">📦</div>
+              <h3 class="text-xl font-bold mb-2">No Products Available</h3>
+              <p class="text-gray-600 mb-4">No products found in the system</p>
+              <button onclick="loadProducts()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                Refresh
+              </button>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Error loading products:', error);
+        
+        document.getElementById('products').innerHTML = `
+          <div class="col-span-full text-center py-12">
+            <div class="text-6xl mb-4">❌</div>
+            <h3 class="text-xl font-bold text-red-600 mb-2">Failed to Load Products</h3>
+            <p class="text-gray-600 mb-4">Error: ${error.message}</p>
+            <button onclick="loadProducts()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+              Try Again
+            </button>
+          </div>
+        `;
+      }
+    }
+    
+    // Category icons
+    function getCategoryIcon(category) {
+      const icons = {
+        'Electronics': '📱',
+        'Clothing': '👕', 
+        'Food': '🍎',
+        'Medicine': '💊',
+        'Cosmetics': '💄',
+        'Books': '📚',
+        'Sports': '⚽',
+        'Home': '🏠',
+        'Appliances': '🔌',
+        'General': '📦'
+      };
+      return icons[category] || '📦';
+    }
+    
+    // Cart functions
+    function addToCart(id, name, price) {
+      console.log('Adding to cart:', id, name, price);
+      
+      const existingItem = cart.find(item => item.id === id);
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        cart.push({ id, name, price, quantity: 1 });
+      }
+      
+      localStorage.setItem('shopping_cart', JSON.stringify(cart));
+      updateCartDisplay();
+      
+      // Show success message
+      const msg = document.createElement('div');
+      msg.className = 'fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50';
+      msg.textContent = `✅ ${name} added to cart!`;
+      document.body.appendChild(msg);
+      
+      setTimeout(() => {
+        if (document.body.contains(msg)) {
+          document.body.removeChild(msg);
+        }
+      }, 3000);
+    }
+    
+    function updateCartDisplay() {
+      const cartCount = document.getElementById('cartCount');
+      const cartItems = document.getElementById('cartItems');
+      const cartTotal = document.getElementById('cartTotal');
+      
+      if (cartCount) {
+        cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+      }
+      
+      if (cartItems) {
+        if (cart.length === 0) {
+          cartItems.innerHTML = '<div class="text-center text-gray-500 py-4">Cart is empty</div>';
+        } else {
+          cartItems.innerHTML = cart.map(item => `
+            <div class="flex justify-between items-center p-3 border-b">
+              <div>
+                <div class="font-medium">${item.name}</div>
+                <div class="text-sm text-gray-600">₹${item.price} x ${item.quantity}</div>
+              </div>
+              <button onclick="removeFromCart(${item.id})" class="text-red-600 hover:text-red-800">
+                Remove
+              </button>
+            </div>
+          `).join('');
+        }
+      }
+      
+      if (cartTotal) {
+        const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        cartTotal.textContent = total.toFixed(2);
+      }
+    }
+    
+    function removeFromCart(id) {
+      cart = cart.filter(item => item.id !== id);
+      localStorage.setItem('shopping_cart', JSON.stringify(cart));
+      updateCartDisplay();
+    }
+    
+    function clearCart() {
+      cart = [];
+      localStorage.setItem('shopping_cart', JSON.stringify(cart));
+      updateCartDisplay();
+    }
+    
+    function toggleCart() {
+      const cartSection = document.getElementById('cartSection');
+      cartSection.classList.toggle('hidden');
+    }
+    
+    function checkout() {
+      if (cart.length === 0) {
+        alert('Cart is empty');
+        return;
+      }
+      alert(`Checkout with ${cart.length} items. Total: ₹${cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}`);
+    }
+    
+    // Initialize
+    console.log('Initializing shop...');
+    updateCartDisplay();
+    loadProducts();
+  </script>
+</body>
+</html>
